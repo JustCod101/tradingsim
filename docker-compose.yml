@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  # TimescaleDB 数据库
+  db:
+    image: timescale/timescaledb:latest-pg15
+    container_name: tradingsim-db
+    environment:
+      POSTGRES_DB: market                    # 可配置
+      POSTGRES_USER: postgres               # 可配置
+      POSTGRES_PASSWORD: postgres           # 可配置
+      TIMESCALEDB_TELEMETRY: off
+    ports:
+      - "5432:5432"                         # 可配置
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./scripts/sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tradingsim-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: tradingsim-redis
+    ports:
+      - "6379:6379"                         # 可配置
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tradingsim-network
+
+  # Spring Boot 后端
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tradingsim-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: db                           # 可配置
+      DB_PORT: 5432                         # 可配置
+      DB_NAME: market                       # 可配置
+      DB_USER: postgres                     # 可配置
+      DB_PASSWORD: postgres                 # 可配置
+      REDIS_HOST: redis                     # 可配置
+      REDIS_PORT: 6379                      # 可配置
+      WS_FRAME_INTERVAL_MS: 250             # 可配置
+      WS_DECISION_TIMEOUT_SEC: 10           # 可配置
+      KEYPOINT_MIN_COUNT: 3                 # 可配置
+      KEYPOINT_MAX_COUNT: 8                 # 可配置
+      SEED_SALT: "demo-salt"                # 可配置
+    ports:
+      - "8080:8080"                         # 可配置
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - tradingsim-network
+
+  # Vue 3 前端
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tradingsim-frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080  # 可配置
+      VITE_WS_URL: ws://localhost:8080/ws       # 可配置
+    ports:
+      - "5173:5173"                         # 可配置
+    depends_on:
+      - backend
+    networks:
+      - tradingsim-network
+
+  # Prometheus 监控
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: tradingsim-prometheus
+    ports:
+      - "9090:9090"                         # 可配置
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - tradingsim-network
+
+  # Grafana 仪表盘
+  grafana:
+    image: grafana/grafana:latest
+    container_name: tradingsim-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin         # 可配置
+      GF_SECURITY_ADMIN_PASSWORD: admin     # 可配置
+      GF_USERS_ALLOW_SIGN_UP: false
+    ports:
+      - "3000:3000"                         # 可配置
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - tradingsim-network
+
+volumes:
+  db_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  tradingsim-network:
+    driver: bridge

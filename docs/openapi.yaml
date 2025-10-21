@@ -1,0 +1,731 @@
+openapi: 3.0.3
+info:
+  title: TradingSim API
+  description: 实时交易模拟系统 REST API
+  version: 1.0.0
+  contact:
+    name: TradingSim Team
+    email: support@tradingsim.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080/api/v1    # 可配置: 开发环境
+    description: 开发环境
+  - url: https://api.tradingsim.com/v1   # 可配置: 生产环境
+    description: 生产环境
+
+paths:
+  /sessions:
+    post:
+      summary: 创建交易会话
+      description: 基于指定的游戏段创建新的交易会话
+      operationId: createSession
+      tags:
+        - Sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+            examples:
+              basic:
+                summary: 基础会话创建
+                value:
+                  segmentId: "demo-001"
+                  userId: "user-123"
+              anonymous:
+                summary: 匿名会话
+                value:
+                  segmentId: "demo-002"
+      responses:
+        '201':
+          description: 会话创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+              examples:
+                success:
+                  summary: 成功响应
+                  value:
+                    id: "session-abc123"
+                    segmentId: "demo-001"
+                    userId: "user-123"
+                    status: "CREATED"
+                    totalFrames: 60
+                    config:
+                      frameIntervalMs: 250
+                      decisionTimeoutSec: 10
+                    createdAt: "2024-01-01T10:00:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      summary: 获取会话列表
+      description: 获取用户的会话列表，支持分页和过滤
+      operationId: getSessions
+      tags:
+        - Sessions
+      parameters:
+        - name: userId
+          in: query
+          description: 用户ID过滤 (可配置)
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: 状态过滤
+          schema:
+            $ref: '#/components/schemas/SessionStatus'
+        - name: page
+          in: query
+          description: 页码 (可配置，从0开始)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: 页大小 (可配置)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: 会话列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /sessions/{sessionId}:
+    get:
+      summary: 获取会话详情
+      description: 获取指定会话的详细信息和统计数据
+      operationId: getSession
+      tags:
+        - Sessions
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: 会话详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: 更新会话状态
+      description: 更新会话状态（开始、暂停、恢复、结束）
+      operationId: updateSession
+      tags:
+        - Sessions
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSessionRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /sessions/{sessionId}/replay:
+    get:
+      summary: 获取会话回放数据
+      description: 获取会话的完整回放数据，用于断线重连
+      operationId: getSessionReplay
+      tags:
+        - Sessions
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - name: fromFrame
+          in: query
+          description: 起始帧索引 (可配置)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: 回放数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplayResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sessions/{sessionId}/decisions:
+    post:
+      summary: 提交交易决策
+      description: 为指定帧提交交易决策（幂等操作）
+      operationId: submitDecision
+      tags:
+        - Decisions
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+      responses:
+        '201':
+          description: 决策提交成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /segments:
+    get:
+      summary: 获取游戏段列表
+      description: 获取可用的游戏段列表，支持难度过滤
+      operationId: getSegments
+      tags:
+        - Segments
+      parameters:
+        - name: difficulty
+          in: query
+          description: 难度等级过滤 (可配置: 1-5)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+        - name: code
+          in: query
+          description: 股票代码过滤
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 游戏段列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentListResponse'
+
+  /leaderboard:
+    get:
+      summary: 获取排行榜
+      description: 获取每日排行榜数据
+      operationId: getLeaderboard
+      tags:
+        - Leaderboard
+      parameters:
+        - name: date
+          in: query
+          description: 日期 (可配置，默认今天)
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          description: 返回条数 (可配置)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: 排行榜数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardResponse'
+
+  /health:
+    get:
+      summary: 健康检查
+      description: 系统健康状态检查
+      operationId: healthCheck
+      tags:
+        - System
+      responses:
+        '200':
+          description: 系统正常
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+components:
+  parameters:
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      description: 会话ID
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9\-_]+$'
+
+  schemas:
+    CreateSessionRequest:
+      type: object
+      required:
+        - segmentId
+      properties:
+        segmentId:
+          type: string
+          description: 游戏段ID
+          example: "demo-001"
+        userId:
+          type: string
+          description: 用户ID (可选，支持匿名)
+          example: "user-123"
+        config:
+          $ref: '#/components/schemas/SessionConfig'
+
+    SessionConfig:
+      type: object
+      description: 会话配置 (可配置)
+      properties:
+        frameIntervalMs:
+          type: integer
+          description: 帧推送间隔(毫秒)
+          minimum: 100
+          maximum: 5000
+          default: 250
+        decisionTimeoutSec:
+          type: integer
+          description: 决策超时时间(秒)
+          minimum: 5
+          maximum: 60
+          default: 10
+
+    UpdateSessionRequest:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          enum: [START, PAUSE, RESUME, STOP]
+          description: 操作类型
+
+    DecisionRequest:
+      type: object
+      required:
+        - frameIndex
+        - decisionType
+        - timestampMs
+      properties:
+        frameIndex:
+          type: integer
+          description: 帧索引
+          minimum: 0
+        decisionType:
+          $ref: '#/components/schemas/DecisionType'
+        price:
+          type: number
+          format: decimal
+          description: 决策价格 (BUY/SELL时必需)
+          minimum: 0
+        quantity:
+          type: integer
+          description: 数量 (可配置)
+          minimum: 1
+          default: 1
+        timestampMs:
+          type: integer
+          format: int64
+          description: 客户端时间戳(毫秒)
+
+    SessionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 会话ID
+        segmentId:
+          type: string
+          description: 游戏段ID
+        userId:
+          type: string
+          description: 用户ID
+        status:
+          $ref: '#/components/schemas/SessionStatus'
+        currentFrameIndex:
+          type: integer
+          description: 当前帧索引
+        totalFrames:
+          type: integer
+          description: 总帧数
+        config:
+          $ref: '#/components/schemas/SessionConfig'
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    SessionDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/SessionResponse'
+        - type: object
+          properties:
+            segment:
+              $ref: '#/components/schemas/SegmentInfo'
+            stats:
+              $ref: '#/components/schemas/SessionStats'
+            decisions:
+              type: array
+              items:
+                $ref: '#/components/schemas/DecisionInfo'
+
+    SessionListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionResponse'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    ReplayResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        frames:
+          type: array
+          items:
+            $ref: '#/components/schemas/FrameData'
+        decisions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DecisionInfo'
+        currentFrame:
+          type: integer
+          description: 当前帧索引
+
+    DecisionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        sessionId:
+          type: string
+        frameIndex:
+          type: integer
+        decisionType:
+          $ref: '#/components/schemas/DecisionType'
+        price:
+          type: number
+          format: decimal
+        responseTimeMs:
+          type: integer
+          description: 响应时间(毫秒)
+        isTimeout:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    SegmentListResponse:
+      type: object
+      properties:
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/SegmentInfo'
+
+    SegmentInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+          description: 股票代码
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        volatility:
+          type: number
+          format: decimal
+          description: 波动率
+        avgVolume:
+          type: integer
+          format: int64
+          description: 平均成交量
+        keypointCount:
+          type: integer
+          description: 关键点数量
+        difficultyLevel:
+          type: integer
+          description: 难度等级 (可配置: 1-5)
+
+    LeaderboardResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        rankings:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+          description: 排名
+        userId:
+          type: string
+        totalScore:
+          type: number
+          format: decimal
+        sessionCount:
+          type: integer
+        winRate:
+          type: number
+          format: decimal
+          description: 胜率
+
+    SessionStats:
+      type: object
+      properties:
+        decisionCount:
+          type: integer
+        avgResponseTimeMs:
+          type: integer
+        timeoutCount:
+          type: integer
+        totalScore:
+          type: number
+          format: decimal
+        totalPnl:
+          type: number
+          format: decimal
+
+    DecisionInfo:
+      type: object
+      properties:
+        frameIndex:
+          type: integer
+        decisionType:
+          $ref: '#/components/schemas/DecisionType'
+        price:
+          type: number
+          format: decimal
+        responseTimeMs:
+          type: integer
+        reward:
+          $ref: '#/components/schemas/RewardInfo'
+
+    RewardInfo:
+      type: object
+      properties:
+        pnl:
+          type: number
+          format: decimal
+        totalScore:
+          type: number
+          format: decimal
+        scoreBreakdown:
+          type: object
+          additionalProperties: true
+
+    FrameData:
+      type: object
+      properties:
+        index:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        open:
+          type: number
+          format: decimal
+        high:
+          type: number
+          format: decimal
+        low:
+          type: number
+          format: decimal
+        close:
+          type: number
+          format: decimal
+        volume:
+          type: integer
+          format: int64
+        isKeypoint:
+          type: boolean
+
+    PageInfo:
+      type: object
+      properties:
+        number:
+          type: integer
+          description: 当前页码
+        size:
+          type: integer
+          description: 页大小
+        totalElements:
+          type: integer
+          format: int64
+          description: 总元素数
+        totalPages:
+          type: integer
+          description: 总页数
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN]
+        components:
+          type: object
+          properties:
+            database:
+              $ref: '#/components/schemas/ComponentHealth'
+            redis:
+              $ref: '#/components/schemas/ComponentHealth'
+            websocket:
+              $ref: '#/components/schemas/ComponentHealth'
+
+    ComponentHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN]
+        details:
+          type: object
+          additionalProperties: true
+
+    SessionStatus:
+      type: string
+      enum: [CREATED, RUNNING, PAUSED, COMPLETED, CANCELLED]
+      description: 会话状态
+
+    DecisionType:
+      type: string
+      enum: [BUY, SELL, SKIP]
+      description: 决策类型
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 错误代码
+        message:
+          type: string
+          description: 错误消息
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+          description: 请求路径
+
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "INVALID_REQUEST"
+            message: "请求参数不合法"
+            timestamp: "2024-01-01T10:00:00Z"
+            path: "/api/v1/sessions"
+
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "RESOURCE_NOT_FOUND"
+            message: "指定的资源不存在"
+            timestamp: "2024-01-01T10:00:00Z"
+            path: "/api/v1/sessions/invalid-id"
+
+    Conflict:
+      description: 资源冲突
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "RESOURCE_CONFLICT"
+            message: "资源状态冲突"
+            timestamp: "2024-01-01T10:00:00Z"
+            path: "/api/v1/sessions/session-123"
+
+    InternalError:
+      description: 服务器内部错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "INTERNAL_SERVER_ERROR"
+            message: "服务器内部错误"
+            timestamp: "2024-01-01T10:00:00Z"
+            path: "/api/v1/sessions"
+
+tags:
+  - name: Sessions
+    description: 交易会话管理
+  - name: Decisions
+    description: 交易决策
+  - name: Segments
+    description: 游戏段管理
+  - name: Leaderboard
+    description: 排行榜
+  - name: System
+    description: 系统功能

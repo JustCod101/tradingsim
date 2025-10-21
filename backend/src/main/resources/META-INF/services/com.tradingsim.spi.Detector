@@ -1,0 +1,2 @@
+com.tradingsim.infra.spi.LocalExtremaDetector
+com.tradingsim.infra.spi.MacdCrossDetector

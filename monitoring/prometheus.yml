@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s                     # 可配置
+  evaluation_interval: 15s                 # 可配置
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus 自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Spring Boot 应用监控
+  - job_name: 'tradingsim-backend'
+    static_configs:
+      - targets: ['backend:8080']          # 可配置
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 5s                     # 可配置
+    scrape_timeout: 5s                      # 可配置

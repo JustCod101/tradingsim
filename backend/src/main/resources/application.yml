@@ -1,0 +1,255 @@
+# TradingSim Backend Configuration
+server:
+  port: 8080  # 可配置: 后端服务端口
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+spring:
+  application:
+    name: tradingsim-backend
+  
+  profiles:
+    active: dev  # 可配置: 激活的配置文件
+  
+  # 数据库配置
+  datasource:
+    url: jdbc:postgresql://localhost:5432/market  # 可配置: 数据库连接
+    username: postgres  # 可配置: 数据库用户名
+    password: postgres  # 可配置: 数据库密码
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20  # 可配置: 连接池最大连接数
+      minimum-idle: 5        # 可配置: 连接池最小空闲连接数
+      connection-timeout: 30000  # 可配置: 连接超时时间(毫秒)
+      idle-timeout: 600000       # 可配置: 空闲超时时间(毫秒)
+      max-lifetime: 1800000      # 可配置: 连接最大生命周期(毫秒)
+      leak-detection-threshold: 60000  # 可配置: 连接泄漏检测阈值(毫秒)
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: validate  # 可配置: DDL策略 (validate/update/create-drop)
+    show-sql: false      # 可配置: 是否显示SQL
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 50  # 可配置: 批处理大小
+        order_inserts: true
+        order_updates: true
+        generate_statistics: true  # 可配置: 是否生成统计信息
+  
+  # Redis配置
+  data:
+    redis:
+      host: localhost  # 可配置: Redis主机
+      port: 6379       # 可配置: Redis端口
+      password:        # 可配置: Redis密码
+      timeout: 2000ms  # 可配置: 连接超时时间
+      lettuce:
+        pool:
+          max-active: 20   # 可配置: 连接池最大连接数
+          max-idle: 10     # 可配置: 连接池最大空闲连接数
+          min-idle: 5      # 可配置: 连接池最小空闲连接数
+          max-wait: 2000ms # 可配置: 连接池最大等待时间
+  
+  # Jackson配置
+  jackson:
+    time-zone: UTC
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus  # 可配置: 暴露的端点
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized  # 可配置: 健康检查详情显示策略
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 10s  # 可配置: 指标收集间隔
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        game.frames.push.latency: true  # 可配置: 自定义指标直方图
+        pause.to.decision.latency: true
+        scoring.duration: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99  # 可配置: 百分位数
+        game.frames.push.latency: 0.5,0.95,0.99
+        pause.to.decision.latency: 0.5,0.95,0.99
+        scoring.duration: 0.5,0.95,0.99
+
+# 日志配置
+logging:
+  level:
+    com.tradingsim: INFO  # 可配置: 应用日志级别
+    org.springframework.web.socket: DEBUG  # 可配置: WebSocket日志级别
+    org.hibernate.SQL: WARN  # 可配置: SQL日志级别
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{sessionId}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{sessionId}] %logger{36} - %msg%n"
+  file:
+    name: logs/tradingsim-backend.log  # 可配置: 日志文件路径
+    max-size: 100MB  # 可配置: 日志文件最大大小
+    max-history: 30  # 可配置: 日志文件保留天数
+
+# 应用自定义配置
+tradingsim:
+  # WebSocket配置
+  websocket:
+    frame-interval-ms: 250      # 可配置: 帧推送间隔(毫秒)
+    decision-timeout-sec: 10    # 可配置: 决策超时时间(秒)
+    heartbeat-interval-sec: 30  # 可配置: 心跳间隔(秒)
+    max-connections: 1000       # 可配置: 最大连接数
+    message-size-limit: 65536   # 可配置: 消息大小限制(字节)
+    send-buffer-size: 524288    # 可配置: 发送缓冲区大小(字节)
+    receive-buffer-size: 524288 # 可配置: 接收缓冲区大小(字节)
+  
+  # 游戏配置
+  game:
+    keypoint:
+      min-count: 3  # 可配置: 最小关键点数量
+      max-count: 8  # 可配置: 最大关键点数量
+    scoring:
+      windows: [5, 10, 20]        # 可配置: 评分窗口大小
+      weights: [0.3, 0.4, 0.3]    # 可配置: 评分权重
+      risk-penalty:
+        mdd: 0.5      # 可配置: 最大回撤惩罚系数
+        sigma: 0.3    # 可配置: 波动率惩罚系数
+        fee: 0.0005   # 可配置: 手续费率
+    segment:
+      filters:
+        volatility:
+          min: 0.01   # 可配置: 最小波动率
+          max: 0.08   # 可配置: 最大波动率
+        min-volume: 1000  # 可配置: 最小成交量
+    seed-salt: "demo-salt"  # 可配置: 随机种子盐值
+    timeframe: "1m"         # 可配置: 时间框架
+    demo-stocks: ["AAPL", "TSLA", "MSFT"]  # 可配置: 演示股票代码
+  
+  # 审计配置
+  audit:
+    enabled: true  # 可配置: 是否启用审计
+    replay-dir: "replay"  # 可配置: 回放文件目录
+    max-file-size: 10MB   # 可配置: 审计文件最大大小
+    retention-days: 90    # 可配置: 审计文件保留天数
+  
+  # 缓存配置
+  cache:
+    session-ttl-minutes: 60     # 可配置: 会话缓存TTL(分钟)
+    segment-ttl-minutes: 1440   # 可配置: 段数据缓存TTL(分钟)
+    leaderboard-ttl-minutes: 5  # 可配置: 排行榜缓存TTL(分钟)
+  
+  # 性能配置
+  performance:
+    async:
+      core-pool-size: 10      # 可配置: 异步任务核心线程数
+      max-pool-size: 50       # 可配置: 异步任务最大线程数
+      queue-capacity: 1000    # 可配置: 异步任务队列容量
+      keep-alive-seconds: 60  # 可配置: 线程保活时间(秒)
+    batch:
+      size: 100               # 可配置: 批处理大小
+      timeout-ms: 5000        # 可配置: 批处理超时时间(毫秒)
+
+---
+# 开发环境配置
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/market
+    username: postgres
+    password: postgres
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  level:
+    com.tradingsim: DEBUG
+    org.springframework.web.socket: DEBUG
+
+tradingsim:
+  websocket:
+    frame-interval-ms: 250  # 开发环境较快的推送间隔
+
+---
+# 生产环境配置
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  datasource:
+    url: jdbc:postgresql://db:5432/market  # Docker容器内地址
+    username: postgres
+    password: postgres
+  
+  data:
+    redis:
+      host: redis  # Docker容器内地址
+      port: 6379
+
+logging:
+  level:
+    com.tradingsim: INFO
+    org.springframework.web.socket: WARN
+
+tradingsim:
+  websocket:
+    frame-interval-ms: 500  # 生产环境较慢的推送间隔以减少负载
+
+---
+# 测试环境配置
+spring:
+  config:
+    activate:
+      on-profile: test
+  
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+logging:
+  level:
+    com.tradingsim: DEBUG
+    org.hibernate.SQL: DEBUG
+
+tradingsim:
+  websocket:
+    frame-interval-ms: 100  # 测试环境快速推送
+  game:
+    keypoint:
+      min-count: 2
+      max-count: 5

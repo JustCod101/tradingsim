@@ -1,0 +1,46 @@
+# .cursorrules — TradingSim codebase guardrails for Cursor + Claude 4
+
+[project]
+name = tradingsim
+goal = "实现历史K线回放 + 关键节点决策的金融模拟游戏（Java 主导），MVP 可运行，并可扩展到生产。"
+primary_languages = ["Java 17+", "TypeScript"]
+frameworks = ["Spring Boot 3", "Vue 3 (Vite)", "ECharts"]
+infra = ["PostgreSQL + TimescaleDB", "Redis", "Docker Compose", "Prometheus/Grafana"]
+rt = ["WebSocket (STOMP over SockJS 可选)", "REST (OpenAPI 3.1)"]
+
+[requirements.hard]
+- 采用分层/六边形架构（api/app/domain/infra），模块清晰、可测试。
+- WebSocket 仅下发当前帧与历史已公开帧；未来窗口数据严禁下发。
+- 所有随机逻辑都必须基于 seed（可复现），seed 在 session 初始化时确定并存档。
+- 关键点检测（Detector）与评分（Scoring）使用 Java SPI/Strategy 插件化，至少各提供 2 种实现。
+- TimescaleDB 存 OHLCV；PostgreSQL 存用户/对局/奖励；Redis 存会话/快照。
+- 提供 OpenAPI 3.1 + WebSocket 消息契约；提供 E2E 演示的 demo 数据与导入脚本。
+- 提供 Micrometer → Prometheus 指标、Grafana 仪表盘 JSON、k6 压测脚本。
+- 使用 Docker Compose 一键拉起完整本地栈（db、redis、backend、frontend、prom+grafana 可选）。
+- 代码中必须标记“// 可配置”处；所有默认值放配置文件或常量集中管理。
+
+[requirements.soft]
+- 代码风格统一（Google Java Style / ESLint+Prettier）。
+- 所有核心服务类需有最小单元测试；关键算法边界条件测试。
+- README 顶部给出 3 步跑通指南；所有命令可复制即可用。
+- 提供风险与 TODO 清单（灰度/AB、合规提示、费率/滑点逻辑开关、限流策略）。
+
+[structure.expected]
+- backend/{api,app,domain,infra,resources}
+- frontend/{src,public}
+- ops/{docker-compose.yml, sql/*.sql, grafana/dashboard.json}
+- tests/{perf,e2e}
+- README.md
+
+[security]
+- 未来窗口收益严禁在客户端计算或推断；评分仅在后端执行。
+- 决策幂等：同 session + keypoint 仅接受一次；断线重连通过快照恢复。
+- WebSocket/REST 加限流与基础鉴权（开发期可先 JWT 简化）。
+
+[review.checklist]
+- ✅ 无“未来数据”泄漏
+- ✅ SPI 实现 ≥ 2（Detector & Scoring）
+- ✅ seed 贯穿（创建→审计日志）
+- ✅ Docker Compose 本地可跑通
+- ✅ 指标暴露齐全、Grafana 可导入
+- ✅ k6 压测脚本可运行

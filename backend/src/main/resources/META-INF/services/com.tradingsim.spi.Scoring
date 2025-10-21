@@ -1,0 +1,2 @@
+com.tradingsim.infra.spi.SingleWindowRule
+com.tradingsim.infra.spi.MultiWindowRiskAwareRule
