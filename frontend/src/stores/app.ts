@@ -107,14 +107,22 @@ export const useAppStore = defineStore('app', () => {
     try {
       const token = localStorage.getItem('auth-token')
       if (token) {
-        // TODO: 验证 token 并获取用户信息
-        // const user = await authApi.getCurrentUser()
-        // currentUser.value = user
+        // 验证 token 并获取用户信息
+        const { authApi } = await import('@/services/auth')
+        const response = await authApi.getCurrentUser()
+        if (response.success && response.data) {
+          currentUser.value = response.data
+        } else {
+          // token无效，清除认证信息
+          localStorage.removeItem('auth-token')
+          localStorage.removeItem('refresh-token')
+        }
       }
     } catch (error) {
       console.warn('Auth check failed:', error)
       // 清除无效的认证信息
       localStorage.removeItem('auth-token')
+      localStorage.removeItem('refresh-token')
     }
   }
   

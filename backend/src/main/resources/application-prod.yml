@@ -1,0 +1,96 @@
+# 生产环境配置
+spring:
+  # 数据源配置 - 生产环境
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/tradingsim}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      idle-timeout: 600000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+  
+  # JPA配置 - 生产环境
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+  
+  # Redis配置 - 生产环境
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      database: 0
+      ssl: ${REDIS_SSL:false}
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+
+# 服务器配置 - 生产环境
+server:
+  port: ${SERVER_PORT:8080}
+  compression:
+    enabled: true
+  error:
+    include-stacktrace: never
+    include-message: never
+
+# 管理端点配置 - 生产环境
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: never
+  security:
+    enabled: true
+
+# 日志配置 - 生产环境
+logging:
+  level:
+    com.tradingsim: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+  file:
+    name: /var/log/tradingsim/tradingsim.log
+    max-size: 100MB
+    max-history: 30
+
+# 应用配置 - 生产环境
+tradingsim:
+  game:
+    max-sessions-per-user: 3
+    session-timeout-minutes: 15
+    
+  market:
+    cache-ttl-minutes: 120
+    
+  security:
+    cors:
+      allowed-origins: ${ALLOWED_ORIGINS}
+      
+  monitoring:
+    metrics:
+      enabled: true
+      export-interval: 30
+    alerts:
+      enabled: true
+      thresholds:
+        error-rate: 0.01
+        response-time: 500

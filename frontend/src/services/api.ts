@@ -26,8 +26,9 @@ const createApiInstance = (): AxiosInstance => {
       const appStore = useAppStore()
       
       // 添加认证token
-      if (appStore.currentUser?.token) {
-        config.headers.Authorization = `Bearer ${appStore.currentUser.token}`
+      const token = localStorage.getItem('auth-token')
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
       }
 
       // 添加请求ID用于追踪
@@ -51,9 +52,9 @@ const createApiInstance = (): AxiosInstance => {
       const appStore = useAppStore()
       appStore.setLoading(false)
 
-      // 检查业务状态码
-      const { code, message } = response.data
-      if (code !== 200) {
+      // 检查业务状态码 - 使用success字段
+      const { success, message } = response.data
+      if (success === false) {
         ElMessage.error(message || '请求失败')
         return Promise.reject(new Error(message || '请求失败'))
       }

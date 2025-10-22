@@ -105,11 +105,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElForm } from 'element-plus'
 import { User, Lock, TrendCharts } from '@element-plus/icons-vue'
 import { useAppStore } from '@/stores/app'
+import { authApi } from '@/services/auth'
 
 // 响应式数据
 const router = useRouter()
@@ -167,34 +168,55 @@ async function handleLogin() {
     
     loading.value = true
     
-    // 模拟登录API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 调用真实的登录API
+      const response = await authApi.login({
+        usernameOrEmail: loginForm.username,
+        password: loginForm.password,
+        rememberMe: loginForm.rememberMe
+      })
     
-    // 记住用户名
-    if (loginForm.rememberMe) {
-      localStorage.setItem('remembered-username', loginForm.username)
+    if (response.success) {
+      // 记住用户名
+      if (loginForm.rememberMe) {
+        localStorage.setItem('remembered-username', loginForm.username)
+      } else {
+        localStorage.removeItem('remembered-username')
+      }
+      
+      // 设置用户信息
+      const { user, token, refreshToken } = response.data
+      console.log('Login success, setting user:', user)
+      appStore.setCurrentUser(user)
+      
+      // 保存token
+      localStorage.setItem('auth-token', token)
+      if (refreshToken) {
+        localStorage.setItem('refresh-token', refreshToken)
+      }
+      
+      console.log('Auth state after login:', {
+        isAuthenticated: appStore.isAuthenticated,
+        currentUser: appStore.currentUser
+      })
+      
+      ElMessage.success('登录成功')
+      
+      // 等待状态更新后再跳转
+      await nextTick()
+      
+      // 跳转逻辑：优先级为 query参数 > sessionStorage > 游戏页面
+      const queryRedirect = router.currentRoute.value.query.redirect as string
+      const sessionRedirect = sessionStorage.getItem('redirect-after-login')
+      const targetPath = queryRedirect || sessionRedirect || '/game'
+      
+      // 清除保存的重定向路径
+      sessionStorage.removeItem('redirect-after-login')
+      
+      console.log('Redirecting to:', targetPath)
+      await router.push(targetPath)
     } else {
-      localStorage.removeItem('remembered-username')
+      ElMessage.error(response.message || '登录失败')
     }
-    
-    // 模拟登录成功
-    const mockUser = {
-      id: 1,
-      username: loginForm.username,
-      email: 'user@example.com',
-      avatar: '',
-      roles: ['user']
-    }
-    
-    // 设置用户信息
-    appStore.setUser(mockUser)
-    appStore.setToken('mock-jwt-token')
-    
-    ElMessage.success('登录成功')
-    
-    // 跳转到首页或之前的页面
-    const redirect = router.currentRoute.value.query.redirect as string
-    router.push(redirect || '/')
     
   } catch (error) {
     console.error('Login failed:', error)

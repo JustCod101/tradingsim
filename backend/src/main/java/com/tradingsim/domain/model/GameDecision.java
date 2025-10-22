@@ -8,13 +8,7 @@ import java.util.Objects;
 /**
  * 游戏决策领域模型
  * 
- * 代表用户在关键点做出的交易决策，包含:
- * - 决策基本信息 (ID、类型、价格、数量)
- * - 决策时机信息 (帧索引、时间戳)
- * - 决策结果信息 (盈亏、评分)
- * - 决策性能信息 (响应时间)
- * 
- * DDD 实体，属于 GameSession 聚合
+ * @author TradingSim Team
  */
 @Entity
 @Table(name = "game_decision")
@@ -22,10 +16,9 @@ public class GameDecision {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "decision_id")
-    private Long decisionId;
+    private Long id;
     
-    @Column(name = "session_id", nullable = false, length = 64)
+    @Column(name = "session_id", nullable = false)
     private String sessionId;
     
     @Column(name = "frame_index", nullable = false)
@@ -35,227 +28,178 @@ public class GameDecision {
     @Column(name = "decision_type", nullable = false)
     private DecisionType decisionType;
     
-    @Column(name = "decision_price", precision = 10, scale = 4)
-    private BigDecimal decisionPrice;
+    @Column(name = "price", precision = 19, scale = 4)
+    private BigDecimal price;
     
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity = 1;
+    @Column(name = "quantity")
+    private Integer quantity;
     
-    @Column(name = "pnl", precision = 10, scale = 4)
+    @Column(name = "pnl", precision = 19, scale = 4)
     private BigDecimal pnl;
     
-    @Column(name = "score", precision = 8, scale = 2)
-    private BigDecimal score;
+    @Column(name = "cumulative_pnl", precision = 19, scale = 4)
+    private BigDecimal cumulativePnl;
+    
+    @Column(name = "decision_time", nullable = false)
+    private Instant decisionTime;
     
     @Column(name = "response_time_ms")
     private Long responseTimeMs;
     
-    @Column(name = "client_id", length = 64)
-    private String clientId;
-    
-    @Column(name = "decision_timestamp", nullable = false)
-    private Instant decisionTimestamp;
-    
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
     
-    // 默认构造函数 (JPA 需要)
-    protected GameDecision() {}
-    
-    /**
-     * 创建新的游戏决策
-     * 
-     * @param sessionId 会话ID
-     * @param frameIndex 帧索引
-     * @param decisionType 决策类型
-     * @param decisionPrice 决策价格 (SKIP时可为null)
-     * @param quantity 数量
-     * @param clientId 客户端ID (用于幂等)
-     * @param decisionTimestamp 决策时间戳
-     */
-    public GameDecision(String sessionId, Integer frameIndex, DecisionType decisionType,
-                       BigDecimal decisionPrice, Integer quantity, String clientId,
-                       Instant decisionTimestamp) {
-        this.sessionId = Objects.requireNonNull(sessionId, "sessionId cannot be null");
-        this.frameIndex = Objects.requireNonNull(frameIndex, "frameIndex cannot be null");
-        this.decisionType = Objects.requireNonNull(decisionType, "decisionType cannot be null");
-        this.decisionPrice = decisionPrice;
-        this.quantity = Objects.requireNonNull(quantity, "quantity cannot be null");
-        this.clientId = clientId;
-        this.decisionTimestamp = Objects.requireNonNull(decisionTimestamp, "decisionTimestamp cannot be null");
+    public GameDecision() {
         this.createdAt = Instant.now();
-        
-        // 业务规则验证
-        validateDecision();
+    }
+    
+    public GameDecision(String sessionId, Integer frameIndex, DecisionType decisionType) {
+        this.sessionId = sessionId;
+        this.frameIndex = frameIndex;
+        this.decisionType = decisionType;
+        this.decisionTime = Instant.now();
+        this.createdAt = Instant.now();
     }
     
     /**
-     * 验证决策的业务规则
+     * 判断是否为交易决策（买入或卖出）
      */
-    private void validateDecision() {
-        if (frameIndex < 0) {
-            throw new IllegalArgumentException("frameIndex must be non-negative");
-        }
-        
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("quantity must be positive");
-        }
-        
-        // BUY 和 SELL 必须有价格，SKIP 不需要价格
-        if ((decisionType == DecisionType.BUY || decisionType == DecisionType.SELL) 
-            && decisionPrice == null) {
-            throw new IllegalArgumentException("decisionPrice is required for BUY/SELL decisions");
-        }
-        
-        if (decisionType == DecisionType.SKIP && decisionPrice != null) {
-            throw new IllegalArgumentException("decisionPrice should be null for SKIP decisions");
-        }
-        
-        if (decisionPrice != null && decisionPrice.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("decisionPrice must be positive");
-        }
+    public boolean isTradingDecision() {
+        return decisionType == DecisionType.BUY || decisionType == DecisionType.SELL;
     }
     
     /**
-     * 设置决策结果 (盈亏和评分)
-     * 
-     * @param pnl 盈亏
-     * @param score 评分
-     */
-    public void setResult(BigDecimal pnl, BigDecimal score) {
-        this.pnl = pnl;
-        this.score = score;
-    }
-    
-    /**
-     * 设置响应时间
-     * 
-     * @param responseTimeMs 响应时间(毫秒)
-     */
-    public void setResponseTime(Long responseTimeMs) {
-        if (responseTimeMs != null && responseTimeMs < 0) {
-            throw new IllegalArgumentException("responseTimeMs must be non-negative");
-        }
-        this.responseTimeMs = responseTimeMs;
-    }
-    
-    /**
-     * 检查是否为买入决策
-     */
-    public boolean isBuy() {
-        return decisionType == DecisionType.BUY;
-    }
-    
-    /**
-     * 检查是否为卖出决策
-     */
-    public boolean isSell() {
-        return decisionType == DecisionType.SELL;
-    }
-    
-    /**
-     * 检查是否为跳过决策
-     */
-    public boolean isSkip() {
-        return decisionType == DecisionType.SKIP;
-    }
-    
-    /**
-     * 检查是否有盈利
+     * 判断是否为盈利决策
      */
     public boolean isProfitable() {
         return pnl != null && pnl.compareTo(BigDecimal.ZERO) > 0;
     }
     
     /**
-     * 检查是否有亏损
+     * 计算决策响应时间（毫秒）
      */
-    public boolean isLoss() {
-        return pnl != null && pnl.compareTo(BigDecimal.ZERO) < 0;
-    }
-    
-    /**
-     * 获取决策方向 (1: 买入, -1: 卖出, 0: 跳过)
-     */
-    public int getDirection() {
-        switch (decisionType) {
-            case BUY: return 1;
-            case SELL: return -1;
-            case SKIP: return 0;
-            default: return 0;
+    public void calculateResponseTime(Instant frameStartTime) {
+        if (frameStartTime != null && decisionTime != null) {
+            this.responseTimeMs = decisionTime.toEpochMilli() - frameStartTime.toEpochMilli();
         }
     }
     
-    /**
-     * 获取决策金额 (价格 * 数量)
-     */
-    public BigDecimal getAmount() {
-        if (decisionPrice == null) return BigDecimal.ZERO;
-        return decisionPrice.multiply(BigDecimal.valueOf(quantity));
+    // Getters and Setters
+    public Long getId() {
+        return id;
     }
     
-    /**
-     * 创建决策的副本 (用于审计)
-     */
-    public GameDecision copy() {
-        GameDecision copy = new GameDecision(sessionId, frameIndex, decisionType, 
-                                           decisionPrice, quantity, clientId, decisionTimestamp);
-        copy.decisionId = this.decisionId;
-        copy.pnl = this.pnl;
-        copy.score = this.score;
-        copy.responseTimeMs = this.responseTimeMs;
-        copy.createdAt = this.createdAt;
-        return copy;
+    public void setId(Long id) {
+        this.id = id;
     }
     
-    // Getters
-    public Long getDecisionId() { return decisionId; }
-    public String getSessionId() { return sessionId; }
-    public Integer getFrameIndex() { return frameIndex; }
-    public DecisionType getDecisionType() { return decisionType; }
-    public BigDecimal getDecisionPrice() { return decisionPrice; }
-    public Integer getQuantity() { return quantity; }
-    public BigDecimal getPnl() { return pnl; }
-    public BigDecimal getScore() { return score; }
-    public Long getResponseTimeMs() { return responseTimeMs; }
-    public String getClientId() { return clientId; }
-    public Instant getDecisionTimestamp() { return decisionTimestamp; }
-    public Instant getCreatedAt() { return createdAt; }
+    public String getSessionId() {
+        return sessionId;
+    }
+    
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+    
+    public Integer getFrameIndex() {
+        return frameIndex;
+    }
+    
+    public void setFrameIndex(Integer frameIndex) {
+        this.frameIndex = frameIndex;
+    }
+    
+    public DecisionType getDecisionType() {
+        return decisionType;
+    }
+    
+    public void setDecisionType(DecisionType decisionType) {
+        this.decisionType = decisionType;
+    }
+    
+    public BigDecimal getPrice() {
+        return price;
+    }
+    
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+    
+    public Integer getQuantity() {
+        return quantity;
+    }
+    
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+    
+    public BigDecimal getPnl() {
+        return pnl;
+    }
+    
+    public void setPnl(BigDecimal pnl) {
+        this.pnl = pnl;
+    }
+    
+    public BigDecimal getCumulativePnl() {
+        return cumulativePnl;
+    }
+    
+    public void setCumulativePnl(BigDecimal cumulativePnl) {
+        this.cumulativePnl = cumulativePnl;
+    }
+    
+    public Instant getDecisionTime() {
+        return decisionTime;
+    }
+    
+    public void setDecisionTime(Instant decisionTime) {
+        this.decisionTime = decisionTime;
+    }
+    
+    public Long getResponseTimeMs() {
+        return responseTimeMs;
+    }
+    
+    public void setResponseTimeMs(Long responseTimeMs) {
+        this.responseTimeMs = responseTimeMs;
+    }
+    
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+    
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
     
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         GameDecision that = (GameDecision) o;
-        return Objects.equals(decisionId, that.decisionId);
+        return Objects.equals(id, that.id);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(decisionId);
+        return Objects.hash(id);
     }
     
     @Override
     public String toString() {
         return "GameDecision{" +
-                "decisionId=" + decisionId +
+                "id=" + id +
                 ", sessionId='" + sessionId + '\'' +
                 ", frameIndex=" + frameIndex +
                 ", decisionType=" + decisionType +
-                ", decisionPrice=" + decisionPrice +
+                ", price=" + price +
                 ", quantity=" + quantity +
                 ", pnl=" + pnl +
-                ", score=" + score +
+                ", cumulativePnl=" + cumulativePnl +
+                ", decisionTime=" + decisionTime +
                 ", responseTimeMs=" + responseTimeMs +
+                ", createdAt=" + createdAt +
                 '}';
     }
-}
-
-/**
- * 决策类型枚举
- */
-enum DecisionType {
-    BUY,    // 买入
-    SELL,   // 卖出
-    SKIP    // 跳过
 }

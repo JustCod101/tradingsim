@@ -10,7 +10,7 @@ DO $$
 DECLARE
     base_price DECIMAL(12,4) := 150.00;    -- 可配置: 基础价格
     volatility DECIMAL := 0.02;            -- 可配置: 波动率
-    current_time TIMESTAMPTZ := '2024-01-01 09:30:00+00'::TIMESTAMPTZ;
+    curr_time TIMESTAMPTZ := '2024-01-01 09:30:00+00'::TIMESTAMPTZ;
     end_time TIMESTAMPTZ := '2024-01-01 16:00:00+00'::TIMESTAMPTZ;
     current_price DECIMAL(12,4) := base_price;
     open_price DECIMAL(12,4);
@@ -20,7 +20,7 @@ DECLARE
     volume_val BIGINT;
     price_change DECIMAL(12,4);
 BEGIN
-    WHILE current_time < end_time LOOP
+    WHILE curr_time < end_time LOOP
         open_price := current_price;
         
         -- 生成随机价格变动
@@ -46,10 +46,10 @@ BEGIN
         
         -- 插入数据
         INSERT INTO ohlcv_1m (code, ts, open, high, low, close, volume)
-        VALUES ('AAPL', current_time, open_price, high_price, low_price, close_price, volume_val);
+        VALUES ('AAPL', curr_time, open_price, high_price, low_price, close_price, volume_val);
         
         current_price := close_price;
-        current_time := current_time + INTERVAL '1 minute';
+        curr_time := curr_time + INTERVAL '1 minute';
     END LOOP;
 END $$;
 
@@ -58,7 +58,7 @@ DO $$
 DECLARE
     base_price DECIMAL(12,4) := 200.00;    -- 可配置: 基础价格
     volatility DECIMAL := 0.03;            -- 可配置: 波动率 (更高)
-    current_time TIMESTAMPTZ := '2024-01-01 09:30:00+00'::TIMESTAMPTZ;
+    curr_time TIMESTAMPTZ := '2024-01-01 09:30:00+00'::TIMESTAMPTZ;
     end_time TIMESTAMPTZ := '2024-01-01 16:00:00+00'::TIMESTAMPTZ;
     current_price DECIMAL(12,4) := base_price;
     open_price DECIMAL(12,4);
@@ -68,7 +68,7 @@ DECLARE
     volume_val BIGINT;
     price_change DECIMAL(12,4);
 BEGIN
-    WHILE current_time < end_time LOOP
+    WHILE curr_time < end_time LOOP
         open_price := current_price;
         
         price_change := (random() - 0.5) * volatility * base_price;
@@ -88,10 +88,10 @@ BEGIN
         volume_val := (2000 + random() * 18000)::BIGINT;  -- 可配置: 更高成交量
         
         INSERT INTO ohlcv_1m (code, ts, open, high, low, close, volume)
-        VALUES ('TSLA', current_time, open_price, high_price, low_price, close_price, volume_val);
+        VALUES ('TSLA', curr_time, open_price, high_price, low_price, close_price, volume_val);
         
         current_price := close_price;
-        current_time := current_time + INTERVAL '1 minute';
+        curr_time := curr_time + INTERVAL '1 minute';
     END LOOP;
 END $$;
 
@@ -100,7 +100,7 @@ DO $$
 DECLARE
     base_price DECIMAL(12,4) := 300.00;    -- 可配置: 基础价格
     volatility DECIMAL := 0.015;           -- 可配置: 波动率 (较低)
-    current_time TIMESTAMPTZ := '2024-01-01 09:30:00+00'::TIMESTAMPTZ;
+    curr_time TIMESTAMPTZ := '2024-01-01 09:30:00+00'::TIMESTAMPTZ;
     end_time TIMESTAMPTZ := '2024-01-01 16:00:00+00'::TIMESTAMPTZ;
     current_price DECIMAL(12,4) := base_price;
     open_price DECIMAL(12,4);
@@ -110,7 +110,7 @@ DECLARE
     volume_val BIGINT;
     price_change DECIMAL(12,4);
 BEGIN
-    WHILE current_time < end_time LOOP
+    WHILE curr_time < end_time LOOP
         open_price := current_price;
         
         price_change := (random() - 0.5) * volatility * base_price;
@@ -130,10 +130,10 @@ BEGIN
         volume_val := (800 + random() * 7200)::BIGINT;   -- 可配置: 中等成交量
         
         INSERT INTO ohlcv_1m (code, ts, open, high, low, close, volume)
-        VALUES ('MSFT', current_time, open_price, high_price, low_price, close_price, volume_val);
+        VALUES ('MSFT', curr_time, open_price, high_price, low_price, close_price, volume_val);
         
         current_price := close_price;
-        current_time := current_time + INTERVAL '1 minute';
+        curr_time := curr_time + INTERVAL '1 minute';
     END LOOP;
 END $$;
 

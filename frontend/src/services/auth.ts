@@ -4,7 +4,7 @@ import type { User, ApiResponse } from '@/types'
 
 // 登录请求参数
 export interface LoginRequest {
-  username: string
+  usernameOrEmail: string
   password: string
   rememberMe?: boolean
 }
@@ -18,11 +18,12 @@ export interface RegisterRequest {
   inviteCode?: string
 }
 
-// 登录响应
+// 登录响应数据
 export interface LoginResponse {
   user: User
   token: string
   refreshToken: string
+  tokenType: string
   expiresIn: number
 }
 
@@ -56,72 +57,72 @@ export interface UpdateProfileRequest {
 export const authApi = {
   // 用户登录
   login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    return request.post('/api/auth/login', data)
+    return request.post('/auth/login', data)
   },
 
   // 用户注册
   register(data: RegisterRequest): Promise<ApiResponse<LoginResponse>> {
-    return request.post('/api/auth/register', data)
+    return request.post('/auth/register', data)
   },
 
   // 用户登出
   logout(): Promise<ApiResponse<void>> {
-    return request.post('/api/auth/logout')
+    return request.post('/auth/logout')
   },
 
   // 刷新访问令牌
   refreshToken(refreshToken: string): Promise<ApiResponse<RefreshTokenResponse>> {
-    return request.post('/api/auth/refresh', { refreshToken })
+    return request.post('/auth/refresh', { refreshToken })
   },
 
   // 获取当前用户信息
   getCurrentUser(): Promise<ApiResponse<User>> {
-    return request.get('/api/auth/me')
+    return request.get('/auth/me')
   },
 
   // 更新用户资料
   updateProfile(data: UpdateProfileRequest): Promise<ApiResponse<User>> {
-    return request.put('/api/auth/profile', data)
+    return request.put('/auth/profile', data)
   },
 
   // 更新密码
   updatePassword(data: UpdatePasswordRequest): Promise<ApiResponse<void>> {
-    return request.put('/api/auth/password', data)
+    return request.put('/auth/password', data)
   },
 
   // 请求密码重置
   requestPasswordReset(data: ResetPasswordRequest): Promise<ApiResponse<void>> {
-    return request.post('/api/auth/password/reset', data)
+    return request.post('/auth/password/reset', data)
   },
 
   // 确认密码重置
   confirmPasswordReset(token: string, newPassword: string): Promise<ApiResponse<void>> {
-    return request.post('/api/auth/password/reset/confirm', { token, newPassword })
+    return request.post('/auth/password/reset/confirm', { token, newPassword })
   },
 
   // 验证邮箱
   verifyEmail(token: string): Promise<ApiResponse<void>> {
-    return request.post('/api/auth/email/verify', { token })
+    return request.post('/auth/email/verify', { token })
   },
 
   // 重新发送验证邮件
   resendVerificationEmail(): Promise<ApiResponse<void>> {
-    return request.post('/api/auth/email/resend')
+    return request.post('/auth/email/resend')
   },
 
   // 检查用户名是否可用
   checkUsernameAvailability(username: string): Promise<ApiResponse<{ available: boolean }>> {
-    return request.get(`/api/auth/check/username/${username}`)
+    return request.get(`/auth/check/username/${username}`)
   },
 
   // 检查邮箱是否可用
   checkEmailAvailability(email: string): Promise<ApiResponse<{ available: boolean }>> {
-    return request.get(`/api/auth/check/email/${email}`)
+    return request.get(`/auth/check/email/${email}`)
   },
 
   // 验证邀请码
   validateInviteCode(code: string): Promise<ApiResponse<{ valid: boolean; inviterName?: string }>> {
-    return request.get(`/api/auth/invite/${code}/validate`)
+    return request.get(`/auth/invite/${code}/validate`)
   },
 
   // 启用两步验证
@@ -130,22 +131,22 @@ export const authApi = {
     secret: string
     backupCodes: string[]
   }>> {
-    return request.post('/api/auth/2fa/enable')
+    return request.post('/auth/2fa/enable')
   },
 
   // 确认两步验证设置
   confirmTwoFactor(code: string): Promise<ApiResponse<void>> {
-    return request.post('/api/auth/2fa/confirm', { code })
+    return request.post('/auth/2fa/confirm', { code })
   },
 
   // 禁用两步验证
   disableTwoFactor(code: string): Promise<ApiResponse<void>> {
-    return request.post('/api/auth/2fa/disable', { code })
+    return request.post('/auth/2fa/disable', { code })
   },
 
   // 生成新的备份码
   generateBackupCodes(): Promise<ApiResponse<{ backupCodes: string[] }>> {
-    return request.post('/api/auth/2fa/backup-codes')
+    return request.post('/auth/2fa/backup-codes')
   },
 
   // 获取用户会话列表
@@ -157,17 +158,17 @@ export const authApi = {
     lastActivity: string
     current: boolean
   }>>> {
-    return request.get('/api/auth/sessions')
+    return request.get('/auth/sessions')
   },
 
   // 撤销用户会话
   revokeSession(sessionId: string): Promise<ApiResponse<void>> {
-    return request.delete(`/api/auth/sessions/${sessionId}`)
+    return request.delete(`/auth/sessions/${sessionId}`)
   },
 
   // 撤销所有其他会话
   revokeAllOtherSessions(): Promise<ApiResponse<void>> {
-    return request.delete('/api/auth/sessions/others')
+    return request.delete('/auth/sessions/others')
   }
 }
 

@@ -173,6 +173,13 @@ router.beforeEach(async (to, from, next) => {
   const appStore = useAppStore()
   
   try {
+    console.log('Route guard:', {
+      to: to.name,
+      from: from.name,
+      isAuthenticated: appStore.isAuthenticated,
+      currentUser: appStore.currentUser?.username
+    })
+    
     // 设置页面标题
     const title = to.meta?.title as string
     if (title) {
@@ -183,6 +190,7 @@ router.beforeEach(async (to, from, next) => {
     
     // 检查认证要求
     if (to.meta?.requiresAuth && !appStore.isAuthenticated) {
+      console.log('Auth required but not authenticated, redirecting to login')
       // 保存目标路由，登录后跳转
       sessionStorage.setItem('redirect-after-login', to.fullPath)
       next('/login')
@@ -204,10 +212,12 @@ router.beforeEach(async (to, from, next) => {
     
     // 如果已登录且访问登录页，重定向到首页
     if ((to.name === 'Login' || to.name === 'Register') && appStore.isAuthenticated) {
+      console.log('Already authenticated, redirecting from login to home')
       next('/')
       return
     }
     
+    console.log('Route guard passed, proceeding to:', to.name)
     next()
   } catch (error) {
     console.error('Route guard error:', error)
