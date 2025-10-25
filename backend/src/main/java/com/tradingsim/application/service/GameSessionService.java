@@ -194,9 +194,6 @@ public class GameSessionService {
      * 计算决策盈亏
      */
     private BigDecimal calculatePnl(GameDecision decision, GameSession session, OhlcvData currentMarketData) {
-        if (decision.getDecisionType() == DecisionType.SKIP) {
-            return BigDecimal.ZERO;
-        }
 
         // 获取前一帧的市场数据
         OhlcvData previousMarketData = getPreviousMarketData(session.getStockCode(), decision.getFrameIndex());
@@ -225,10 +222,10 @@ public class GameSessionService {
         session.setTotalPnl(session.getTotalPnl().add(decision.getPnl()));
 
         // 更新余额
-        if (decision.getDecisionType() == DecisionType.BUY) {
+        if (decision.getDecisionType() == DecisionType.LONG) {
             BigDecimal cost = decision.getPrice().multiply(BigDecimal.valueOf(decision.getQuantity()));
             session.setCurrentBalance(session.getCurrentBalance().subtract(cost));
-        } else if (decision.getDecisionType() == DecisionType.SELL) {
+        } else if (decision.getDecisionType() == DecisionType.SHORT) {
             BigDecimal revenue = decision.getPrice().multiply(BigDecimal.valueOf(decision.getQuantity()));
             session.setCurrentBalance(session.getCurrentBalance().add(revenue));
         }

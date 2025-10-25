@@ -37,64 +37,19 @@
         <div class="stat-card">
           <div class="stat-label">{{ $t('game.profit') }}</div>
           <div class="stat-value" :class="profitClass">
-            ${{ formatCurrency(gameStore.totalProfit) }}
+            ${{ formatCurrency(gameStore.totalPnl) }}
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">{{ $t('game.trades') }}</div>
-          <div class="stat-value">{{ gameStore.totalTrades }}</div>
+          <div class="stat-label">{{ $t('game.score') }}</div>
+          <div class="stat-value">{{ gameStore.score }}</div>
         </div>
       </div>
 
       <div class="game-chart">
-        <div ref="chartContainer" class="chart-container"></div>
+        <KLineChart />
       </div>
 
-      <div class="trading-panel">
-        <el-card>
-          <template #header>
-            <span>{{ $t('game.trading') }}</span>
-          </template>
-          <div class="trading-form">
-            <el-form :model="tradeForm" label-width="80px">
-              <el-form-item :label="$t('game.symbol')">
-                <el-select v-model="tradeForm.symbol" style="width: 100%">
-                  <el-option 
-                    v-for="symbol in availableSymbols" 
-                    :key="symbol" 
-                    :label="symbol" 
-                    :value="symbol"
-                  />
-                </el-select>
-              </el-form-item>
-              <el-form-item :label="$t('game.amount')">
-                <el-input-number 
-                  v-model="tradeForm.amount" 
-                  :min="1" 
-                  :max="gameStore.currentBalance"
-                  style="width: 100%"
-                />
-              </el-form-item>
-              <el-form-item>
-                <el-button 
-                  type="success" 
-                  @click="placeTrade('buy')"
-                  :disabled="!canTrade"
-                >
-                  {{ $t('game.buy') }}
-                </el-button>
-                <el-button 
-                  type="danger" 
-                  @click="placeTrade('sell')"
-                  :disabled="!canTrade"
-                >
-                  {{ $t('game.sell') }}
-                </el-button>
-              </el-form-item>
-            </el-form>
-          </div>
-        </el-card>
-      </div>
     </div>
 
     <div v-else class="game-lobby">
@@ -119,27 +74,12 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '@/stores/game'
 import { Trophy } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+import KLineChart from '@/components/KLineChart.vue'
 
 const gameStore = useGameStore()
-const chartContainer = ref<HTMLElement>()
-let chart: echarts.ECharts | null = null
-
-const tradeForm = ref({
-  symbol: 'AAPL',
-  amount: 100
-})
-
-const availableSymbols = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN']
 
 const profitClass = computed(() => {
-  return gameStore.totalProfit >= 0 ? 'profit-positive' : 'profit-negative'
-})
-
-const canTrade = computed(() => {
-  return gameStore.isInGame && 
-         tradeForm.value.amount > 0 && 
-         tradeForm.value.amount <= gameStore.currentBalance
+  return gameStore.totalPnl >= 0 ? 'profit-positive' : 'profit-negative'
 })
 
 const formatCurrency = (value: number) => {
@@ -151,8 +91,10 @@ const formatCurrency = (value: number) => {
 
 const startNewGame = async () => {
   try {
-    await gameStore.startGame()
-    initChart()
+    // 生成一个默认的segmentId，或者从配置中获取
+    const stockCode = 'AAPL' // 可以根据需要修改为动态值
+    const difficulty = 'EASY' // 可以根据需要修改为动态值
+    await gameStore.startGame(stockCode, difficulty)
   } catch (error) {
     console.error('Failed to start game:', error)
   }
@@ -161,69 +103,10 @@ const startNewGame = async () => {
 const endGame = async () => {
   try {
     await gameStore.endGame()
-    if (chart) {
-      chart.dispose()
-      chart = null
-    }
   } catch (error) {
     console.error('Failed to end game:', error)
   }
 }
-
-const placeTrade = async (type: 'buy' | 'sell') => {
-  try {
-    await gameStore.placeTrade({
-      symbol: tradeForm.value.symbol,
-      type,
-      amount: tradeForm.value.amount
-    })
-  } catch (error) {
-    console.error('Failed to place trade:', error)
-  }
-}
-
-const initChart = () => {
-  if (!chartContainer.value) return
-
-  chart = echarts.init(chartContainer.value)
-  
-  const option = {
-    title: {
-      text: 'Stock Price Chart',
-      left: 'center'
-    },
-    tooltip: {
-      trigger: 'axis'
-    },
-    xAxis: {
-      type: 'time'
-    },
-    yAxis: {
-      type: 'value',
-      scale: true
-    },
-    series: [{
-      name: 'Price',
-      type: 'line',
-      data: [],
-      smooth: true
-    }]
-  }
-  
-  chart.setOption(option)
-}
-
-onMounted(() => {
-  if (gameStore.isInGame) {
-    initChart()
-  }
-})
-
-onUnmounted(() => {
-  if (chart) {
-    chart.dispose()
-  }
-})
 </script>
 
 <style scoped lang="scss">

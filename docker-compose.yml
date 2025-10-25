@@ -60,6 +60,8 @@ services:
       KEYPOINT_MIN_COUNT: 3                 # 可配置
       KEYPOINT_MAX_COUNT: 8                 # 可配置
       SEED_SALT: "demo-salt"                # 可配置
+      ALPHAVANTAGE_API_KEY: "0M5AWAPC9F2U2SE6"  # Alpha Vantage API密钥
+      ALPHAVANTAGE_API_ENABLED: "true"      # 启用Alpha Vantage API
     ports:
       - "8080:8080"                         # 可配置
     depends_on:

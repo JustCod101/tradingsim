@@ -57,7 +57,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 禁用CSRF（因为使用JWT）
+            // 禁用CSRF
             .csrf(csrf -> csrf.disable())
             
             // 配置CORS
@@ -68,73 +68,9 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             
-            // 配置请求授权
+            // 暂时允许所有请求通过，专注于游戏业务逻辑开发
             .authorizeHttpRequests(authz -> authz
-                // 公开的认证端点
-                .requestMatchers(
-                    "/auth/login",
-                    "/auth/register", 
-                    "/auth/refresh",
-                    "/auth/validate"
-                ).permitAll()
-                
-                // 公开的市场数据端点
-                .requestMatchers(
-                    "/market/**"
-                ).permitAll()
-                
-                // WebSocket端点
-                .requestMatchers(
-                    "/ws/**",
-                    "/websocket/**"
-                ).permitAll()
-                
-                // 健康检查和监控端点
-                .requestMatchers(
-                    "/actuator/**",
-                    "/health/**"
-                ).permitAll()
-                
-                // API文档端点
-                .requestMatchers(
-                    "/doc.html",
-                    "/webjars/**",
-                    "/swagger-resources/**",
-                    "/v3/api-docs/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html"
-                ).permitAll()
-                
-                // 静态资源
-                .requestMatchers(
-                    "/static/**",
-                    "/public/**",
-                    "/favicon.ico"
-                ).permitAll()
-                
-                // 其他所有请求需要认证
-                .anyRequest().authenticated()
-            )
-            
-            // 添加JWT认证过滤器
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-            
-            // 配置异常处理
-            .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(401);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write(
-                        "{\"success\":false,\"message\":\"未认证或认证已过期\",\"data\":null}"
-                    );
-                })
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.setStatus(403);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write(
-                        "{\"success\":false,\"message\":\"权限不足\",\"data\":null}"
-                    );
-                })
+                .anyRequest().permitAll()
             );
         
         return http.build();

@@ -63,7 +63,7 @@ export const gameSessionApi = {
 export const gameDecisionApi = {
   // 提交交易决策
   submit(sessionId: string, decision: {
-    type: 'BUY' | 'SELL' | 'HOLD'
+    type: 'LONG' | 'SHORT'
     quantity?: number
     price?: number
     reasoning?: string

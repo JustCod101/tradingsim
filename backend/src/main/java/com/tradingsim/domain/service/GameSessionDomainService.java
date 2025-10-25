@@ -4,8 +4,13 @@ import com.tradingsim.domain.model.GameSession;
 import com.tradingsim.domain.model.GameDecision;
 import com.tradingsim.domain.model.SessionStatus;
 import com.tradingsim.domain.model.DecisionType;
+import com.tradingsim.domain.model.OhlcvData;
 import com.tradingsim.domain.repository.GameSessionRepository;
 import com.tradingsim.domain.repository.GameDecisionRepository;
+import com.tradingsim.domain.repository.OhlcvDataRepository;
+import com.tradingsim.infrastructure.spi.GameStrategyProvider;
+import com.tradingsim.infrastructure.spi.MarketDataProvider;
+import com.tradingsim.infrastructure.spi.SpiManager;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -24,11 +29,17 @@ public class GameSessionDomainService {
     
     private final GameSessionRepository sessionRepository;
     private final GameDecisionRepository decisionRepository;
+    private final OhlcvDataRepository ohlcvDataRepository;
+    private final SpiManager spiManager;
     
     public GameSessionDomainService(GameSessionRepository sessionRepository,
-                                   GameDecisionRepository decisionRepository) {
+                                   GameDecisionRepository decisionRepository,
+                                   OhlcvDataRepository ohlcvDataRepository,
+                                   SpiManager spiManager) {
         this.sessionRepository = sessionRepository;
         this.decisionRepository = decisionRepository;
+        this.ohlcvDataRepository = ohlcvDataRepository;
+        this.spiManager = spiManager;
     }
     
     /**
@@ -37,6 +48,8 @@ public class GameSessionDomainService {
     public GameSession createSession(String stockCode, String timeframe, BigDecimal initialBalance) {
         String sessionId = generateSessionId();
         GameSession session = new GameSession(sessionId, stockCode, timeframe, initialBalance);
+        session.setCreatedAt(Instant.now());
+        session.setUpdatedAt(Instant.now());
         return sessionRepository.save(session);
     }
     
@@ -107,8 +120,11 @@ public class GameSessionDomainService {
         // 创建决策
         GameDecision decision = new GameDecision(sessionId, frameIndex, decisionType);
         decision.setPrice(price);
-        decision.setQuantity(quantity);
+        decision.setQuantity(quantity != null ? quantity : 1);
         decision.setResponseTimeMs(responseTimeMs);
+        
+        // 计算PnL
+        calculateAndSetPnl(decision, session);
         
         // 保存决策
         decisionRepository.save(decision);
@@ -281,5 +297,60 @@ public class GameSessionDomainService {
      */
     private String generateSessionId() {
         return UUID.randomUUID().toString();
+    }
+    
+    /**
+     * 计算并设置决策的PnL
+     */
+    private void calculateAndSetPnl(GameDecision decision, GameSession session) {
+        try {
+            // 获取当前市场数据
+            List<MarketDataProvider> marketDataProviders = spiManager.getEnabledProviders(MarketDataProvider.class);
+            if (marketDataProviders.isEmpty()) {
+                decision.setPnl(BigDecimal.ZERO);
+                return;
+            }
+            
+            MarketDataProvider marketDataProvider = marketDataProviders.get(0);
+            OhlcvData currentData = marketDataProvider.getLatestOhlcvData(session.getStockCode());
+            
+            // 获取前一帧的市场数据
+            OhlcvData previousData = getPreviousMarketData(session.getStockCode(), decision.getFrameIndex());
+            double previousPrice = previousData != null ? 
+                previousData.getClosePrice().doubleValue() : 
+                currentData.getClosePrice().doubleValue();
+            
+            // 使用策略提供者计算PnL
+            List<GameStrategyProvider> strategyProviders = spiManager.getEnabledProviders(GameStrategyProvider.class);
+            if (!strategyProviders.isEmpty()) {
+                GameStrategyProvider strategyProvider = strategyProviders.get(0);
+                double pnl = strategyProvider.calculatePnl(decision, 
+                    currentData.getClosePrice().doubleValue(), 
+                    previousPrice);
+                decision.setPnl(BigDecimal.valueOf(pnl));
+            } else {
+                decision.setPnl(BigDecimal.ZERO);
+            }
+        } catch (Exception e) {
+            // 如果计算失败，设置为0
+            decision.setPnl(BigDecimal.ZERO);
+        }
+    }
+    
+    /**
+     * 获取前一帧的市场数据
+     */
+    private OhlcvData getPreviousMarketData(String stockCode, Integer frameIndex) {
+        if (frameIndex <= 0) {
+            return null;
+        }
+        
+        try {
+            // 这里简化处理，实际应该根据时间序列获取前一帧数据
+            // 暂时返回null，让调用方使用当前价格
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

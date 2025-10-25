@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 public class GameDecisionRequest {
     
     private String sessionId;
+    private Integer frameIndex;
     private String decisionType;
     private BigDecimal price;
     private Integer quantity;
@@ -17,8 +18,9 @@ public class GameDecisionRequest {
 
     public GameDecisionRequest() {}
 
-    public GameDecisionRequest(String sessionId, String decisionType, BigDecimal price, Integer quantity, Long responseTimeMs) {
+    public GameDecisionRequest(String sessionId,Integer frameIndex, String decisionType, BigDecimal price, Integer quantity, Long responseTimeMs) {
         this.sessionId = sessionId;
+        this.frameIndex = frameIndex;
         this.decisionType = decisionType;
         this.price = price;
         this.quantity = quantity;
@@ -33,7 +35,8 @@ public class GameDecisionRequest {
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
     }
-
+    public Integer getFrameIndex() { return frameIndex;}
+    public void setFrameIndex(Integer frameIndex) { this.frameIndex = frameIndex;}
     public String getDecisionType() {
         return decisionType;
     }

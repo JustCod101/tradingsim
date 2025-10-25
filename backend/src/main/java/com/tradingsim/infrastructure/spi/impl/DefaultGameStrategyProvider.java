@@ -40,16 +40,16 @@ public class DefaultGameStrategyProvider implements GameStrategyProvider {
 
     @Override
     public double calculatePnl(GameDecision decision, double currentPrice, double previousPrice) {
-        if (decision == null || decision.getDecisionType() == DecisionType.SKIP) {
+        if (decision == null) {
             return 0.0;
         }
 
         double priceChange = currentPrice - previousPrice;
         int quantity = decision.getQuantity();
 
-        if (decision.getDecisionType() == DecisionType.BUY) {
+        if (decision.getDecisionType() == DecisionType.LONG) {
             return priceChange * quantity;
-        } else if (decision.getDecisionType() == DecisionType.SELL) {
+        } else if (decision.getDecisionType() == DecisionType.SHORT) {
             return -priceChange * quantity;
         }
 
@@ -111,12 +111,12 @@ public class DefaultGameStrategyProvider implements GameStrategyProvider {
         }
 
         // 检查价格（买卖决策需要价格）
-        if (decision.getDecisionType() != DecisionType.SKIP && decision.getPrice() == null) {
+        if (decision.getPrice() == null) {
             return false;
         }
 
         // 检查余额（买入时需要足够余额）
-        if (decision.getDecisionType() == DecisionType.BUY) {
+        if (decision.getDecisionType() == DecisionType.LONG) {
             double requiredAmount = decision.getPrice().doubleValue() * decision.getQuantity();
             if (session.getCurrentBalance().doubleValue() < requiredAmount) {
                 return false;

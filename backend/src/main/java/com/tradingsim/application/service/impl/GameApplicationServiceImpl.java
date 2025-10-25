@@ -47,7 +47,7 @@ public class GameApplicationServiceImpl implements GameApplicationService {
         // 需要先获取当前帧索引和决策类型
         GameSession session = gameSessionDomainService.submitDecision(
                 sessionId, 
-                0, // 当前帧索引，需要从会话中获取
+                request.getFrameIndex(), // 使用请求中的帧索引
                 com.tradingsim.domain.model.DecisionType.valueOf(request.getDecisionType()), 
                 request.getPrice(), 
                 request.getQuantity(), 
@@ -69,6 +69,12 @@ public class GameApplicationServiceImpl implements GameApplicationService {
                         .map(this::convertToResponse)
                         .collect(Collectors.toList()))
                 .orElse(java.util.Collections.emptyList());
+    }
+
+    @Override
+    public GameSessionResponse startSession(String sessionId) {
+        GameSession session = gameSessionDomainService.startSession(sessionId);
+        return convertToResponse(session);
     }
 
     @Override

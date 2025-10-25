@@ -90,6 +90,7 @@ public class GameController {
         
         try {
             GameDecisionResponse response = gameApplicationService.submitDecision(sessionId, request);
+            logger.info(response.toString());
             logger.info("决策提交成功: sessionId={}", sessionId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -111,6 +112,24 @@ public class GameController {
             return ResponseEntity.ok(decisions);
         } catch (Exception e) {
             logger.error("获取会话决策历史失败: sessionId={}, error={}", sessionId, e.getMessage(), e);
+            throw e;
+        }
+    }
+    
+    /**
+     * 启动游戏会话
+     */
+    @PostMapping("/sessions/{sessionId}/start")
+    public ResponseEntity<GameSessionResponse> startSession(
+            @PathVariable @NotBlank String sessionId) {
+        logger.info("启动游戏会话: sessionId={}", sessionId);
+        
+        try {
+            GameSessionResponse response = gameApplicationService.startSession(sessionId);
+            logger.info("游戏会话启动成功: sessionId={}", sessionId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("启动游戏会话失败: sessionId={}, error={}", sessionId, e.getMessage(), e);
             throw e;
         }
     }

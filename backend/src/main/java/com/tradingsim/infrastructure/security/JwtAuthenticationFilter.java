@@ -38,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response, 
             FilterChain filterChain
     ) throws ServletException, IOException {
+        logger.info("JWT过滤器处理请求: {}", request.getRequestURI());
         
         try {
             String token = extractTokenFromRequest(request);
@@ -91,17 +92,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
+        logger.info("JWT过滤器检查路径: {}", path);
         
         // 跳过认证端点
         if (path.startsWith("/api/auth/login") || 
             path.startsWith("/api/auth/register") || 
             path.startsWith("/api/auth/refresh") ||
             path.startsWith("/api/auth/validate")) {
+            logger.info("跳过认证端点: {}", path);
             return true;
         }
         
         // 跳过公开的市场数据端点
         if (path.startsWith("/api/market/") || path.startsWith("/api/market-data/")) {
+            logger.info("跳过市场数据端点: {}", path);
+            return true;
+        }
+        
+        // 跳过数据导入端点（用于测试和管理）
+        if (path.startsWith("/api/data-import/")) {
+            logger.info("跳过数据导入端点: {}", path);
             return true;
         }
         

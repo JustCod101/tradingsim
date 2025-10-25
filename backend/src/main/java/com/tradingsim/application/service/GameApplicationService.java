@@ -34,6 +34,11 @@ public interface GameApplicationService {
     List<GameDecisionResponse> getSessionDecisions(String sessionId);
     
     /**
+     * 启动游戏会话
+     */
+    GameSessionResponse startSession(String sessionId);
+    
+    /**
      * 结束游戏会话
      */
     GameSessionResponse finishSession(String sessionId);

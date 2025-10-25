@@ -1,1 +1,2 @@
 com.tradingsim.infrastructure.spi.impl.DefaultMarketDataProvider
+com.tradingsim.infrastructure.spi.impl.AlphaVantageMarketDataProvider

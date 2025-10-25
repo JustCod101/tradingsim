@@ -4,7 +4,7 @@
 
 -- 创建枚举类型
 CREATE TYPE session_status AS ENUM ('CREATED', 'RUNNING', 'PAUSED', 'COMPLETED', 'CANCELLED');
-CREATE TYPE decision_type AS ENUM ('BUY', 'SELL', 'SKIP');
+CREATE TYPE decision_type AS ENUM ('LONG', 'SHORT');
 
 -- 游戏会话表 (根据GameSession实体类)
 CREATE TABLE IF NOT EXISTS game_session (

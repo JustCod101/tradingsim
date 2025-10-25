@@ -1,0 +1,2452 @@
+{
+"openapi": "3.0.1",
+"info": {
+"title": "TradingSim API",
+"description": "交易模拟系统后端API文档",
+"contact": {
+"name": "TradingSim Team",
+"url": "https://github.com/tradingsim/tradingsim",
+"email": "support@tradingsim.com"
+},
+"license": {
+"name": "MIT License",
+"url": "https://opensource.org/licenses/MIT"
+},
+"version": "1.0.0"
+},
+"servers": [
+{
+"url": "http://localhost:8080",
+"description": "开发环境"
+},
+{
+"url": "https://api.tradingsim.com",
+"description": "生产环境"
+}
+],
+"security": [
+{
+"Bearer Authentication": []
+}
+],
+"tags": [
+{
+"name": "市场数据",
+"description": "股票市场OHLCV数据相关API"
+},
+{
+"name": "游戏管理",
+"description": "交易模拟游戏相关API"
+},
+{
+"name": "用户管理",
+"description": "用户信息和偏好设置相关API"
+},
+{
+"name": "数据导入",
+"description": "股票数据导入相关API"
+},
+{
+"name": "认证管理",
+"description": "用户认证相关API"
+}
+],
+"paths": {
+"/users/{userId}/profile": {
+"get": {
+"tags": [
+"用户管理"
+],
+"summary": "获取用户资料",
+"description": "获取指定用户的详细资料信息",
+"operationId": "getUserProfile",
+"parameters": [
+{
+"name": "userId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "成功获取用户资料",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserProfileResponse"
+}
+}
+}
+},
+"404": {
+"description": "用户不存在",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserProfileResponse"
+}
+}
+}
+}
+}
+},
+"put": {
+"tags": [
+"用户管理"
+],
+"summary": "更新用户资料",
+"description": "更新指定用户的资料信息",
+"operationId": "updateUserProfile",
+"parameters": [
+{
+"name": "userId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/UserProfileResponse"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "成功更新用户资料",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserProfileResponse"
+}
+}
+}
+},
+"400": {
+"description": "请求参数无效",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserProfileResponse"
+}
+}
+}
+},
+"404": {
+"description": "用户不存在",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserProfileResponse"
+}
+}
+}
+}
+}
+}
+},
+"/users/{userId}/preferences": {
+"get": {
+"tags": [
+"用户管理"
+],
+"summary": "获取用户偏好设置",
+"description": "获取指定用户的偏好设置",
+"operationId": "getUserPreferences",
+"parameters": [
+{
+"name": "userId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "成功获取用户偏好设置",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserPreferencesResponse"
+}
+}
+}
+},
+"404": {
+"description": "用户不存在",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserPreferencesResponse"
+}
+}
+}
+}
+}
+},
+"put": {
+"tags": [
+"用户管理"
+],
+"summary": "更新用户偏好设置",
+"description": "更新指定用户的偏好设置",
+"operationId": "updateUserPreferences",
+"parameters": [
+{
+"name": "userId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/UserPreferencesRequest"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "成功更新用户偏好设置",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserPreferencesResponse"
+}
+}
+}
+},
+"400": {
+"description": "请求参数无效",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserPreferencesResponse"
+}
+}
+}
+},
+"404": {
+"description": "用户不存在",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserPreferencesResponse"
+}
+}
+}
+}
+}
+}
+},
+"/market-data/batch": {
+"post": {
+"tags": [
+"市场数据"
+],
+"operationId": "saveBatchData",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/OhlcvData"
+}
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+},
+"/game/sessions": {
+"post": {
+"tags": [
+"游戏管理"
+],
+"summary": "创建游戏会话",
+"description": "创建新的交易模拟游戏会话",
+"operationId": "createSession",
+"parameters": [
+{
+"name": "stockCode",
+"in": "query",
+"description": "股票代码",
+"required": true,
+"schema": {
+"type": "string"
+},
+"example": "AAPL"
+},
+{
+"name": "difficulty",
+"in": "query",
+"description": "游戏难度",
+"required": true,
+"schema": {
+"type": "string"
+},
+"example": "EASY"
+}
+],
+"responses": {
+"200": {
+"description": "游戏会话创建成功",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/GameSessionResponse"
+}
+}
+}
+},
+"400": {
+"description": "请求参数错误",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/GameSessionResponse"
+}
+}
+}
+}
+}
+}
+},
+"/game/sessions/{sessionId}/start": {
+"post": {
+"tags": [
+"游戏管理"
+],
+"operationId": "startSession",
+"parameters": [
+{
+"name": "sessionId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/GameSessionResponse"
+}
+}
+}
+}
+}
+}
+},
+"/game/sessions/{sessionId}/finish": {
+"post": {
+"tags": [
+"游戏管理"
+],
+"operationId": "finishSession",
+"parameters": [
+{
+"name": "sessionId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/GameSessionResponse"
+}
+}
+}
+}
+}
+}
+},
+"/game/sessions/{sessionId}/decisions": {
+"get": {
+"tags": [
+"游戏管理"
+],
+"operationId": "getSessionDecisions",
+"parameters": [
+{
+"name": "sessionId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/GameDecisionResponse"
+}
+}
+}
+}
+}
+}
+},
+"post": {
+"tags": [
+"游戏管理"
+],
+"operationId": "submitDecision",
+"parameters": [
+{
+"name": "sessionId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/GameDecisionRequest"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/GameDecisionResponse"
+}
+}
+}
+}
+}
+}
+},
+"/data-import/sample-data": {
+"post": {
+"tags": [
+"数据导入"
+],
+"summary": "导入示例数据",
+"description": "快速导入AAPL、TSLA、MSFT等示例股票的近期数据",
+"operationId": "importSampleData",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/ImportResult"
+}
+}
+}
+}
+}
+}
+},
+"/data-import/latest/{stockCode}": {
+"post": {
+"tags": [
+"数据导入"
+],
+"summary": "导入最新数据",
+"description": "导入指定股票的最新数据",
+"operationId": "importLatestData",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"description": "股票代码",
+"required": true,
+"schema": {
+"type": "string"
+},
+"example": "AAPL"
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"/data-import/latest/batch": {
+"post": {
+"tags": [
+"数据导入"
+],
+"summary": "批量导入最新数据",
+"description": "批量导入多个股票的最新数据",
+"operationId": "batchImportLatestData",
+"parameters": [
+{
+"name": "stockCodes",
+"in": "query",
+"description": "股票代码列表",
+"required": true,
+"schema": {
+"type": "array",
+"items": {
+"type": "string"
+}
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/ImportResult"
+}
+}
+}
+}
+}
+}
+},
+"/data-import/historical/{stockCode}": {
+"post": {
+"tags": [
+"数据导入"
+],
+"summary": "导入历史数据",
+"description": "导入指定股票在指定时间范围内的历史数据",
+"operationId": "importHistoricalData",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"description": "股票代码",
+"required": true,
+"schema": {
+"type": "string"
+},
+"example": "AAPL"
+},
+{
+"name": "startTime",
+"in": "query",
+"description": "开始时间",
+"required": true,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+},
+{
+"name": "endTime",
+"in": "query",
+"description": "结束时间",
+"required": true,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+}
+],
+"responses": {
+"200": {
+"description": "导入成功",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+},
+"400": {
+"description": "请求参数错误",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+},
+"500": {
+"description": "导入失败",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"/data-import/historical/batch": {
+"post": {
+"tags": [
+"数据导入"
+],
+"summary": "批量导入历史数据",
+"description": "批量导入多个股票在指定时间范围内的历史数据",
+"operationId": "batchImportHistoricalData",
+"parameters": [
+{
+"name": "stockCodes",
+"in": "query",
+"description": "股票代码列表",
+"required": true,
+"schema": {
+"type": "array",
+"items": {
+"type": "string"
+}
+}
+},
+{
+"name": "startTime",
+"in": "query",
+"description": "开始时间",
+"required": true,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+},
+{
+"name": "endTime",
+"in": "query",
+"description": "结束时间",
+"required": true,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/ImportResult"
+}
+}
+}
+}
+}
+}
+},
+"/auth/validate": {
+"post": {
+"tags": [
+"认证管理"
+],
+"operationId": "validateToken",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "string"
+}
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+},
+"/auth/register": {
+"post": {
+"tags": [
+"认证管理"
+],
+"operationId": "register",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/RegisterRequest"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+},
+"/auth/refresh": {
+"post": {
+"tags": [
+"认证管理"
+],
+"operationId": "refreshToken",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "string"
+}
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+},
+"/auth/logout": {
+"post": {
+"tags": [
+"认证管理"
+],
+"operationId": "logout",
+"parameters": [
+{
+"name": "Authorization",
+"in": "header",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+},
+"/auth/login": {
+"post": {
+"tags": [
+"认证管理"
+],
+"summary": "用户登录",
+"description": "通过用户名/邮箱和密码进行登录",
+"operationId": "login",
+"requestBody": {
+"content": {
+"application/json": {
+"schema": {
+"$ref": "#/components/schemas/LoginRequest"
+}
+}
+},
+"required": true
+},
+"responses": {
+"200": {
+"description": "登录成功",
+"content": {
+"*/*": {
+"schema": {
+"type": "object"
+}
+}
+}
+},
+"400": {
+"description": "请求参数错误",
+"content": {
+"*/*": {
+"schema": {
+"type": "object"
+}
+}
+}
+},
+"401": {
+"description": "用户名或密码错误",
+"content": {
+"*/*": {
+"schema": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+},
+"/users/{userId}/stats": {
+"get": {
+"tags": [
+"用户管理"
+],
+"summary": "获取用户统计信息",
+"description": "获取指定用户的详细统计信息",
+"operationId": "getUserStats",
+"parameters": [
+{
+"name": "userId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "成功获取用户统计信息",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserStatsResponse"
+}
+}
+}
+},
+"404": {
+"description": "用户不存在",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserStatsResponse"
+}
+}
+}
+}
+}
+}
+},
+"/users/{userId}/ranking": {
+"get": {
+"tags": [
+"用户管理"
+],
+"summary": "获取用户排名",
+"description": "获取指定用户在排行榜中的排名信息",
+"operationId": "getUserRanking",
+"parameters": [
+{
+"name": "userId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "成功获取用户排名",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserRanking"
+}
+}
+}
+},
+"404": {
+"description": "用户不存在",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/UserRanking"
+}
+}
+}
+}
+}
+}
+},
+"/users/{userId}/game-history": {
+"get": {
+"tags": [
+"用户管理"
+],
+"summary": "获取用户游戏历史",
+"description": "获取指定用户的游戏历史记录",
+"operationId": "getUserGameHistory",
+"parameters": [
+{
+"name": "userId",
+"in": "path",
+"description": "用户ID",
+"required": true,
+"schema": {
+"type": "string"
+}
+},
+{
+"name": "limit",
+"in": "query",
+"description": "返回记录数量限制",
+"required": false,
+"schema": {
+"type": "integer",
+"format": "int32",
+"default": 10
+},
+"example": 10
+}
+],
+"responses": {
+"200": {
+"description": "成功获取游戏历史",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/GameSessionResponse"
+}
+}
+}
+}
+},
+"404": {
+"description": "用户不存在",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/GameSessionResponse"
+}
+}
+}
+}
+}
+}
+}
+},
+"/users/validate/username": {
+"get": {
+"tags": [
+"用户管理"
+],
+"summary": "验证用户名",
+"description": "验证用户名是否可用",
+"operationId": "validateUsername",
+"parameters": [
+{
+"name": "username",
+"in": "query",
+"description": "用户名",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "验证结果",
+"content": {
+"*/*": {
+"schema": {
+"type": "boolean"
+}
+}
+}
+}
+}
+}
+},
+"/users/validate/email": {
+"get": {
+"tags": [
+"用户管理"
+],
+"summary": "验证邮箱",
+"description": "验证邮箱是否可用",
+"operationId": "validateEmail",
+"parameters": [
+{
+"name": "email",
+"in": "query",
+"description": "邮箱地址",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "验证结果",
+"content": {
+"*/*": {
+"schema": {
+"type": "boolean"
+}
+}
+}
+}
+}
+}
+},
+"/users/search": {
+"get": {
+"tags": [
+"用户管理"
+],
+"summary": "搜索用户",
+"description": "根据用户名搜索用户",
+"operationId": "searchUsers",
+"parameters": [
+{
+"name": "query",
+"in": "query",
+"description": "搜索关键词",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "成功搜索用户",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/UserProfileResponse"
+}
+}
+}
+}
+}
+}
+}
+},
+"/users/rankings": {
+"get": {
+"tags": [
+"用户管理"
+],
+"summary": "获取排行榜",
+"description": "获取用户排行榜",
+"operationId": "getRankings",
+"parameters": [
+{
+"name": "limit",
+"in": "query",
+"description": "返回记录数量限制",
+"required": false,
+"schema": {
+"type": "integer",
+"format": "int32",
+"default": 10
+},
+"example": 10
+}
+],
+"responses": {
+"200": {
+"description": "成功获取排行榜",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/UserRanking"
+}
+}
+}
+}
+}
+}
+}
+},
+"/users/active": {
+"get": {
+"tags": [
+"用户管理"
+],
+"summary": "获取活跃用户",
+"description": "获取当前活跃的用户列表",
+"operationId": "getActiveUsers",
+"responses": {
+"200": {
+"description": "成功获取活跃用户列表",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/UserProfileResponse"
+}
+}
+}
+}
+}
+}
+}
+},
+"/test/hello": {
+"get": {
+"tags": [
+"test-controller"
+],
+"operationId": "hello",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"/test/data-import-test": {
+"get": {
+"tags": [
+"test-controller"
+],
+"operationId": "dataImportTest",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"/market-data/{stockCode}": {
+"get": {
+"tags": [
+"市场数据"
+],
+"summary": "获取股票OHLCV数据",
+"description": "根据股票代码获取OHLCV数据，支持时间范围和数量限制",
+"operationId": "getOhlcvData",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"description": "股票代码",
+"required": true,
+"schema": {
+"type": "string"
+},
+"example": "AAPL"
+},
+{
+"name": "startTime",
+"in": "query",
+"description": "开始时间",
+"required": false,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+},
+{
+"name": "endTime",
+"in": "query",
+"description": "结束时间",
+"required": false,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+},
+{
+"name": "limit",
+"in": "query",
+"description": "数据条数限制",
+"required": false,
+"schema": {
+"type": "integer",
+"format": "int32",
+"default": 100
+},
+"example": 100
+}
+],
+"responses": {
+"200": {
+"description": "成功获取数据",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/OhlcvData"
+}
+}
+}
+}
+},
+"400": {
+"description": "请求参数错误",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/OhlcvData"
+}
+}
+}
+}
+}
+}
+},
+"delete": {
+"tags": [
+"市场数据"
+],
+"operationId": "deleteStockData",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+},
+"/market-data/{stockCode}/stats": {
+"get": {
+"tags": [
+"市场数据"
+],
+"operationId": "getDataStats",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/DataStats"
+}
+}
+}
+}
+}
+}
+},
+"/market-data/{stockCode}/latest": {
+"get": {
+"tags": [
+"市场数据"
+],
+"operationId": "getLatestOhlcvData",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/OhlcvData"
+}
+}
+}
+}
+}
+}
+},
+"/market-data/{stockCode}/exists": {
+"get": {
+"tags": [
+"市场数据"
+],
+"operationId": "checkDataExists",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "boolean"
+}
+}
+}
+}
+}
+}
+},
+"/market-data/{stockCode}/before": {
+"get": {
+"tags": [
+"市场数据"
+],
+"operationId": "getPreviousData",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+},
+{
+"name": "timestamp",
+"in": "query",
+"required": true,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+},
+{
+"name": "limit",
+"in": "query",
+"required": false,
+"schema": {
+"type": "integer",
+"format": "int32",
+"default": 10
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/OhlcvData"
+}
+}
+}
+}
+}
+}
+},
+"delete": {
+"tags": [
+"市场数据"
+],
+"operationId": "deleteDataBefore",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+},
+{
+"name": "timestamp",
+"in": "query",
+"required": true,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+},
+"/market-data/{stockCode}/after": {
+"get": {
+"tags": [
+"市场数据"
+],
+"operationId": "getNextData",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+},
+{
+"name": "timestamp",
+"in": "query",
+"required": true,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+},
+{
+"name": "limit",
+"in": "query",
+"required": false,
+"schema": {
+"type": "integer",
+"format": "int32",
+"default": 10
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/OhlcvData"
+}
+}
+}
+}
+}
+}
+}
+},
+"/market-data/stocks": {
+"get": {
+"tags": [
+"市场数据"
+],
+"operationId": "getAllStockCodes",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+}
+},
+"/health": {
+"get": {
+"tags": [
+"health-controller"
+],
+"operationId": "health",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"/health/detailed": {
+"get": {
+"tags": [
+"health-controller"
+],
+"operationId": "detailedHealth",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"/game/users/{userId}/history": {
+"get": {
+"tags": [
+"游戏管理"
+],
+"operationId": "getUserGameHistory_1",
+"parameters": [
+{
+"name": "userId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+},
+{
+"name": "limit",
+"in": "query",
+"required": false,
+"schema": {
+"type": "integer",
+"format": "int32",
+"default": 20
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/GameSessionResponse"
+}
+}
+}
+}
+}
+}
+}
+},
+"/game/sessions/{sessionId}": {
+"get": {
+"tags": [
+"游戏管理"
+],
+"operationId": "getSession",
+"parameters": [
+{
+"name": "sessionId",
+"in": "path",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/GameSessionResponse"
+}
+}
+}
+}
+}
+}
+},
+"/game/leaderboard": {
+"get": {
+"tags": [
+"游戏管理"
+],
+"operationId": "getLeaderboard",
+"parameters": [
+{
+"name": "limit",
+"in": "query",
+"required": false,
+"schema": {
+"type": "integer",
+"format": "int32",
+"default": 10
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"$ref": "#/components/schemas/GameSessionResponse"
+}
+}
+}
+}
+}
+}
+}
+},
+"/data-import/supported-stocks": {
+"get": {
+"tags": [
+"数据导入"
+],
+"summary": "获取支持的股票代码",
+"description": "获取所有支持的股票代码列表",
+"operationId": "getSupportedStockCodes",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "array",
+"items": {
+"type": "string"
+}
+}
+}
+}
+}
+}
+}
+},
+"/data-import/providers/status": {
+"get": {
+"tags": [
+"数据导入"
+],
+"summary": "获取提供者状态",
+"description": "获取所有数据提供者的状态信息",
+"operationId": "getProvidersStatus",
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object",
+"additionalProperties": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"/data-import/integrity/{stockCode}": {
+"get": {
+"tags": [
+"数据导入"
+],
+"summary": "检查数据完整性",
+"description": "检查指定股票在指定时间范围内的数据完整性",
+"operationId": "checkDataIntegrity",
+"parameters": [
+{
+"name": "stockCode",
+"in": "path",
+"description": "股票代码",
+"required": true,
+"schema": {
+"type": "string"
+},
+"example": "AAPL"
+},
+{
+"name": "startTime",
+"in": "query",
+"description": "开始时间",
+"required": true,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+},
+{
+"name": "endTime",
+"in": "query",
+"description": "结束时间",
+"required": true,
+"schema": {
+"type": "string",
+"format": "date-time"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"$ref": "#/components/schemas/DataIntegrityReport"
+}
+}
+}
+}
+}
+}
+},
+"/auth/me": {
+"get": {
+"tags": [
+"认证管理"
+],
+"operationId": "getCurrentUser",
+"parameters": [
+{
+"name": "Authorization",
+"in": "header",
+"required": true,
+"schema": {
+"type": "string"
+}
+}
+],
+"responses": {
+"200": {
+"description": "OK",
+"content": {
+"*/*": {
+"schema": {
+"type": "object"
+}
+}
+}
+}
+}
+}
+}
+},
+"components": {
+"schemas": {
+"UserProfileResponse": {
+"type": "object",
+"properties": {
+"userId": {
+"type": "string"
+},
+"username": {
+"type": "string"
+},
+"email": {
+"type": "string"
+},
+"avatarUrl": {
+"type": "string"
+},
+"displayName": {
+"type": "string"
+},
+"bio": {
+"type": "string"
+},
+"fullName": {
+"type": "string"
+},
+"phone": {
+"type": "string"
+},
+"birthDate": {
+"type": "string",
+"format": "date"
+},
+"timezone": {
+"type": "string"
+},
+"language": {
+"type": "string"
+},
+"createdAt": {
+"type": "string",
+"format": "date-time"
+},
+"lastLoginAt": {
+"type": "string",
+"format": "date-time"
+},
+"active": {
+"type": "boolean"
+}
+}
+},
+"UserPreferencesRequest": {
+"required": [
+"preferredDifficulty",
+"preferredTimeframe"
+],
+"type": "object",
+"properties": {
+"preferredDifficulty": {
+"type": "string"
+},
+"preferredTimeframe": {
+"type": "string"
+},
+"notificationsEnabled": {
+"type": "boolean"
+},
+"soundEnabled": {
+"type": "boolean"
+},
+"theme": {
+"type": "string"
+},
+"language": {
+"type": "string"
+},
+"autoSaveEnabled": {
+"type": "boolean"
+},
+"showTutorials": {
+"type": "boolean"
+},
+"riskTolerance": {
+"type": "string"
+},
+"tradingStyle": {
+"type": "string"
+},
+"watchlist": {
+"type": "string"
+}
+}
+},
+"UserPreferencesResponse": {
+"type": "object",
+"properties": {
+"userId": {
+"type": "string"
+},
+"preferredDifficulty": {
+"type": "string"
+},
+"preferredTimeframe": {
+"type": "string"
+},
+"notificationsEnabled": {
+"type": "boolean"
+},
+"soundEnabled": {
+"type": "boolean"
+},
+"theme": {
+"type": "string"
+},
+"language": {
+"type": "string"
+},
+"updatedAt": {
+"type": "string",
+"format": "date-time"
+}
+}
+},
+"OhlcvData": {
+"type": "object",
+"properties": {
+"id": {
+"$ref": "#/components/schemas/OhlcvId"
+},
+"openPrice": {
+"type": "number"
+},
+"highPrice": {
+"type": "number"
+},
+"lowPrice": {
+"type": "number"
+},
+"closePrice": {
+"type": "number"
+},
+"volume": {
+"type": "integer",
+"format": "int64"
+},
+"createdAt": {
+"type": "string",
+"format": "date-time"
+},
+"priceChangePercent": {
+"type": "number"
+},
+"bullish": {
+"type": "boolean"
+},
+"bearish": {
+"type": "boolean"
+},
+"bodySize": {
+"type": "number"
+},
+"upperShadow": {
+"type": "number"
+},
+"lowerShadow": {
+"type": "number"
+}
+}
+},
+"OhlcvId": {
+"type": "object",
+"properties": {
+"code": {
+"type": "string"
+},
+"timestamp": {
+"type": "string",
+"format": "date-time"
+}
+}
+},
+"GameSessionResponse": {
+"type": "object",
+"properties": {
+"sessionId": {
+"type": "string"
+},
+"userId": {
+"type": "string"
+},
+"stockCode": {
+"type": "string"
+},
+"status": {
+"type": "string"
+},
+"difficulty": {
+"type": "string"
+},
+"initialBalance": {
+"type": "number"
+},
+"currentBalance": {
+"type": "number"
+},
+"totalReturn": {
+"type": "number"
+},
+"returnPercentage": {
+"type": "number"
+},
+"currentFrame": {
+"type": "integer",
+"format": "int32"
+},
+"totalFrames": {
+"type": "integer",
+"format": "int32"
+},
+"score": {
+"type": "integer",
+"format": "int32"
+},
+"createdAt": {
+"type": "string",
+"format": "date-time"
+},
+"updatedAt": {
+"type": "string",
+"format": "date-time"
+},
+"finishedAt": {
+"type": "string",
+"format": "date-time"
+}
+}
+},
+"GameDecisionRequest": {
+"type": "object",
+"properties": {
+"sessionId": {
+"type": "string"
+},
+"frameIndex": {
+"type": "integer",
+"format": "int32"
+},
+"decisionType": {
+"type": "string"
+},
+"price": {
+"type": "number"
+},
+"quantity": {
+"type": "integer",
+"format": "int32"
+},
+"responseTimeMs": {
+"type": "integer",
+"format": "int64"
+}
+}
+},
+"GameDecisionResponse": {
+"type": "object",
+"properties": {
+"decisionId": {
+"type": "string"
+},
+"sessionId": {
+"type": "string"
+},
+"frameIndex": {
+"type": "integer",
+"format": "int32"
+},
+"decisionType": {
+"type": "string"
+},
+"price": {
+"type": "number"
+},
+"quantity": {
+"type": "integer",
+"format": "int32"
+},
+"responseTimeMs": {
+"type": "integer",
+"format": "int64"
+},
+"profit": {
+"type": "number"
+},
+"profitPercentage": {
+"type": "number"
+},
+"createdAt": {
+"type": "string",
+"format": "date-time"
+}
+}
+},
+"ImportResult": {
+"type": "object",
+"properties": {
+"totalStocks": {
+"type": "integer",
+"format": "int32"
+},
+"successfulStocks": {
+"type": "integer",
+"format": "int32"
+},
+"failedStocks": {
+"type": "integer",
+"format": "int32"
+},
+"totalRecords": {
+"type": "integer",
+"format": "int32"
+},
+"errors": {
+"type": "array",
+"items": {
+"type": "string"
+}
+},
+"successRate": {
+"type": "number",
+"format": "double"
+}
+}
+},
+"RegisterRequest": {
+"required": [
+"confirmPassword",
+"email",
+"password",
+"username"
+],
+"type": "object",
+"properties": {
+"username": {
+"maxLength": 50,
+"minLength": 3,
+"type": "string"
+},
+"email": {
+"type": "string"
+},
+"password": {
+"maxLength": 100,
+"minLength": 6,
+"type": "string"
+},
+"confirmPassword": {
+"type": "string"
+},
+"fullName": {
+"maxLength": 100,
+"minLength": 0,
+"type": "string"
+},
+"passwordMatching": {
+"type": "boolean"
+}
+}
+},
+"LoginRequest": {
+"required": [
+"password",
+"usernameOrEmail"
+],
+"type": "object",
+"properties": {
+"usernameOrEmail": {
+"type": "string"
+},
+"password": {
+"type": "string"
+},
+"rememberMe": {
+"type": "boolean"
+}
+}
+},
+"UserStatsResponse": {
+"type": "object",
+"properties": {
+"userId": {
+"type": "string"
+},
+"totalSessions": {
+"type": "integer",
+"format": "int32"
+},
+"completedSessions": {
+"type": "integer",
+"format": "int32"
+},
+"completionRate": {
+"type": "number",
+"format": "double"
+},
+"totalScore": {
+"type": "number"
+},
+"bestScore": {
+"type": "number"
+},
+"averageScore": {
+"type": "number"
+},
+"totalPnl": {
+"type": "number"
+},
+"bestPnl": {
+"type": "number"
+},
+"worstPnl": {
+"type": "number"
+},
+"winRate": {
+"type": "number"
+},
+"totalTrades": {
+"type": "integer",
+"format": "int32"
+},
+"winningTrades": {
+"type": "integer",
+"format": "int32"
+},
+"losingTrades": {
+"type": "integer",
+"format": "int32"
+},
+"avgResponseTimeMs": {
+"type": "integer",
+"format": "int64"
+},
+"maxConsecutiveWins": {
+"type": "integer",
+"format": "int32"
+},
+"maxConsecutiveLosses": {
+"type": "integer",
+"format": "int32"
+},
+"totalPlayTimeMinutes": {
+"type": "integer",
+"format": "int64"
+},
+"rankPosition": {
+"type": "integer",
+"format": "int32"
+},
+"rankPercentile": {
+"type": "number"
+}
+}
+},
+"UserRanking": {
+"type": "object",
+"properties": {
+"userId": {
+"type": "string"
+},
+"username": {
+"type": "string"
+},
+"avatarUrl": {
+"type": "string"
+},
+"totalScore": {
+"type": "number"
+},
+"totalPnl": {
+"type": "number"
+},
+"winRate": {
+"type": "number"
+},
+"rankPosition": {
+"type": "integer",
+"format": "int32"
+}
+}
+},
+"DataStats": {
+"type": "object",
+"properties": {
+"stockCode": {
+"type": "string"
+},
+"totalRecords": {
+"type": "integer",
+"format": "int64"
+},
+"latestTimestamp": {
+"type": "string",
+"format": "date-time"
+}
+}
+},
+"DataIntegrityReport": {
+"type": "object",
+"properties": {
+"stockCode": {
+"type": "string"
+},
+"startTime": {
+"type": "string",
+"format": "date-time"
+},
+"endTime": {
+"type": "string",
+"format": "date-time"
+},
+"expectedRecords": {
+"type": "integer",
+"format": "int64"
+},
+"actualRecords": {
+"type": "integer",
+"format": "int64"
+},
+"completeness": {
+"type": "number",
+"format": "double"
+},
+"missingPeriods": {
+"type": "array",
+"items": {
+"type": "string"
+}
+},
+"complete": {
+"type": "boolean"
+}
+}
+}
+},
+"securitySchemes": {
+"Bearer Authentication": {
+"type": "http",
+"description": "请在请求头中添加 Authorization: Bearer {token}",
+"scheme": "bearer",
+"bearerFormat": "JWT"
+}
+}
+}
+}

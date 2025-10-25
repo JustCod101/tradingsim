@@ -7,17 +7,13 @@ package com.tradingsim.domain.model;
  */
 public enum DecisionType {
     /**
-     * 买入
+     * 做多
      */
-    BUY,
+    LONG,
     
     /**
-     * 卖出
+     * 做空
      */
-    SELL,
-    
-    /**
-     * 跳过/不操作
-     */
-    SKIP
+    SHORT,
+
 }

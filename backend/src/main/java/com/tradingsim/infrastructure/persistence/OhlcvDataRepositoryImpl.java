@@ -25,18 +25,18 @@ interface OhlcvDataJpaRepository extends JpaRepository<OhlcvData, OhlcvId> {
                                                        @Param("startTime") Instant startTime,
                                                        @Param("endTime") Instant endTime);
     
-    @Query("SELECT o FROM OhlcvData o WHERE o.id.code = :stockCode ORDER BY o.id.timestamp DESC")
+    @Query(value = "SELECT * FROM ohlcv_1m o WHERE o.code = :stockCode ORDER BY o.ts DESC LIMIT 1", nativeQuery = true)
     Optional<OhlcvData> findLatestByStockCode(@Param("stockCode") String stockCode);
     
-    @Query(value = "SELECT * FROM ohlcv_data o WHERE o.code = :stockCode ORDER BY o.timestamp DESC LIMIT :limit", nativeQuery = true)
+    @Query(value = "SELECT * FROM ohlcv_1m o WHERE o.code = :stockCode ORDER BY o.ts DESC LIMIT :limit", nativeQuery = true)
     List<OhlcvData> findLatestByStockCodeWithLimit(@Param("stockCode") String stockCode, @Param("limit") int limit);
     
-    @Query(value = "SELECT * FROM ohlcv_data o WHERE o.code = :stockCode AND o.timestamp < :timestamp ORDER BY o.timestamp DESC LIMIT :limit", nativeQuery = true)
+    @Query(value = "SELECT * FROM ohlcv_1m o WHERE o.code = :stockCode AND o.ts < :timestamp ORDER BY o.ts DESC LIMIT :limit", nativeQuery = true)
     List<OhlcvData> findPreviousData(@Param("stockCode") String stockCode, 
                                     @Param("timestamp") Instant timestamp, 
                                     @Param("limit") int limit);
     
-    @Query(value = "SELECT * FROM ohlcv_data o WHERE o.code = :stockCode AND o.timestamp > :timestamp ORDER BY o.timestamp ASC LIMIT :limit", nativeQuery = true)
+    @Query(value = "SELECT * FROM ohlcv_1m o WHERE o.code = :stockCode AND o.ts > :timestamp ORDER BY o.ts ASC LIMIT :limit", nativeQuery = true)
     List<OhlcvData> findNextData(@Param("stockCode") String stockCode, 
                                 @Param("timestamp") Instant timestamp, 
                                 @Param("limit") int limit);

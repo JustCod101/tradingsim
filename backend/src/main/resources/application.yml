@@ -33,6 +33,8 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
+        connection:
+          handling_mode: DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION
   
   # Redis配置
   data:
@@ -97,7 +99,8 @@ management:
 logging:
   level:
     com.tradingsim: INFO
-    org.springframework.web: INFO
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: DEBUG
     org.hibernate.SQL: WARN
     org.hibernate.type.descriptor.sql.BasicBinder: WARN
   pattern:
@@ -155,3 +158,9 @@ tradingsim:
       thresholds:
         error-rate: 0.05
         response-time: 1000
+
+# Alpha Vantage API配置
+alphavantage:
+  api:
+    key: 0M5AWAPC9F2U2SE6  # 使用真实API key
+    enabled: true

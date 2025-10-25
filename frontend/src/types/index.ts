@@ -28,15 +28,15 @@ export interface PaginatedResponse<T = any> {
 // 游戏会话相关类型
 export interface GameSession extends BaseEntity {
   userId: string
-  segmentId: string
+  stockCode: string
+  difficulty: SegmentDifficulty
   status: GameSessionStatus
   currentFrame: number
   totalFrames: number
-  totalScore: number
+  score: number
   totalPnl: number
-  buyDecisions: number
-  sellDecisions: number
-  skipDecisions: number
+  longDecisions: number
+  shortDecisions: number
   timeoutCount: number
   averageResponseTime: number
   seed: number
@@ -75,9 +75,8 @@ export interface GameDecision extends BaseEntity {
 }
 
 export enum DecisionType {
-  BUY = 'BUY',
-  SELL = 'SELL',
-  SKIP = 'SKIP'
+  LONG = 'LONG',
+  SHORT = 'SHORT',
 }
 
 // OHLCV 数据类型

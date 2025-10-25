@@ -49,6 +49,7 @@ declare module 'vue' {
     ElUpload: typeof import('element-plus/es')['ElUpload']
     GlobalLoading: typeof import('./src/components/GlobalLoading.vue')['default']
     GlobalMessage: typeof import('./src/components/GlobalMessage.vue')['default']
+    KLineChart: typeof import('./src/components/KLineChart.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

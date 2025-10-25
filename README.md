@@ -12,7 +12,7 @@ git clone <your-repo> && cd tradingsim
 docker compose up -d
 
 # 3. 访问前端界面
-open http://localhost:5173
+open http://localhost:3000
 ```
 
 ## 📋 系统架构

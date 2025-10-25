@@ -65,7 +65,7 @@ public class GameDecision {
      * 判断是否为交易决策（买入或卖出）
      */
     public boolean isTradingDecision() {
-        return decisionType == DecisionType.BUY || decisionType == DecisionType.SELL;
+        return decisionType == DecisionType.LONG || decisionType == DecisionType.SHORT;
     }
     
     /**
